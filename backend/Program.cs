@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using RigMatch.Api.Data;
 using RigMatch.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+builder.Services.AddDbContext<RigMatchDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=rigmatch.db";
+    options.UseSqlite(connectionString);
+});
 builder.Services.AddScoped<ICvTextExtractionService, CvTextExtractionService>();
 builder.Services.AddHttpClient<ICvParsingService, CvParsingService>();
 builder.Services.Configure<CvParsingOptions>(builder.Configuration.GetSection("CvParsing"));
@@ -13,13 +20,20 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(FrontendCorsPolicy, policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.SetIsOriginAllowed(origin =>
+            Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.IsLoopback)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<RigMatchDbContext>();
+    dbContext.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 

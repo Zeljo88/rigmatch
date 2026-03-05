@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -37,6 +38,24 @@ public sealed class CvParsingService : ICvParsingService
     private readonly IWebHostEnvironment _environment;
     private readonly IOptions<CvParsingOptions> _options;
     private readonly ILogger<CvParsingService> _logger;
+    private const int MaxAttempts = 3;
+    private static readonly string[] RelevantParagraphMarkers =
+    [
+        "summary",
+        "profile",
+        "about",
+        "experience",
+        "employment",
+        "work history",
+        "education",
+        "skills",
+        "certification",
+        "certificate",
+        "contact",
+        "phone",
+        "email",
+        "linkedin"
+    ];
 
     public CvParsingService(
         HttpClient httpClient,
@@ -58,7 +77,7 @@ public sealed class CvParsingService : ICvParsingService
         }
 
         var options = _options.Value;
-        var normalizedText = NormalizeCvTextLength(cvText, options.MaxTextChars);
+        var normalizedText = PrepareCvText(cvText, options.MaxTextChars);
 
         if (_environment.IsDevelopment() && options.UseMockInDevelopment)
         {
@@ -75,38 +94,100 @@ public sealed class CvParsingService : ICvParsingService
                 new
                 {
                     role = "system",
-                    content =
-                        "You extract structured candidate data from CV text. Return ONLY valid JSON with this exact shape: {\"name\":\"\",\"email\":\"\",\"jobTitles\":[],\"companies\":[],\"skills\":[],\"certifications\":[],\"experienceYears\":0}. Use empty strings, empty arrays, and 0 for missing values."
+                    content = """
+                              You are RigMatch CV Parser v1.
+                              
+                              Goal: Convert unstructured CV text into structured data.
+                              
+                              Hard rules:
+                              - Output MUST be valid JSON only. No markdown. No explanations.
+                              - Do NOT guess or invent. If a field is not explicit, return null or [].
+                              - Prefer factual extraction over summarization.
+                              - Remove duplicates in arrays (case-insensitive).
+                              - Keep lists concise: max 30 skills, max 20 certifications.
+                              """
                 },
                 new
                 {
                     role = "user",
-                    content = $"Extract candidate details from the CV below and return JSON only:\n\n{normalizedText}"
+                    content = $$"""
+                                Extract structured data from this CV text and return JSON exactly matching this schema:
+                                {
+                                  "name": "string|null",
+                                  "email": "string|null",
+                                  "jobTitles": ["string"],
+                                  "companies": ["string"],
+                                  "skills": ["string"],
+                                  "certifications": ["string"],
+                                  "experienceYears": "number|null",
+                                  "extractionNotes": {
+                                    "missingCriticalFields": ["string"],
+                                    "lowConfidenceFields": ["string"]
+                                  }
+                                }
+                                
+                                Critical fields (if missing, list in missingCriticalFields):
+                                - name, email, jobTitles
+                                
+                                CV text:
+                                <<<
+                                {{normalizedText}}
+                                >>>
+                                """
                 }
             },
             temperature = 0.1,
-            max_tokens = 900,
+            max_tokens = options.MaxCompletionTokens,
             response_format = new { type = "json_object" }
         };
 
         var requestUri =
             $"{options.Endpoint.TrimEnd('/')}/openai/deployments/{options.DeploymentName}/chat/completions?api-version={options.ApiVersion}";
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        request.Headers.Add("api-key", options.ApiKey);
-        request.Content = new StringContent(JsonSerializer.Serialize(requestPayload), Encoding.UTF8, "application/json");
-
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
+        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
         {
-            _logger.LogWarning("CV parsing request failed. StatusCode={StatusCode}", (int)response.StatusCode);
-            throw new HttpRequestException("Azure OpenAI request failed.");
+            using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            request.Headers.Add("api-key", options.ApiKey);
+            request.Content = new StringContent(JsonSerializer.Serialize(requestPayload), Encoding.UTF8, "application/json");
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return ParseModelResponse(responseContent);
+            }
+
+            var statusCode = (int)response.StatusCode;
+            var retryAfterSeconds = ExtractRetryAfterSeconds(response);
+            var serviceMessage = ExtractServiceErrorMessage(responseContent);
+            var finalMessage = BuildErrorMessage(statusCode, serviceMessage);
+
+            var isRetryable = response.StatusCode == HttpStatusCode.TooManyRequests ||
+                              (int)response.StatusCode >= 500;
+
+            if (isRetryable && attempt < MaxAttempts)
+            {
+                var waitSeconds = retryAfterSeconds ?? attempt * 2;
+                _logger.LogWarning(
+                    "CV parsing request failed (attempt {Attempt}/{MaxAttempts}). StatusCode={StatusCode}. Retrying in {WaitSeconds}s.",
+                    attempt,
+                    MaxAttempts,
+                    statusCode,
+                    waitSeconds);
+                await Task.Delay(TimeSpan.FromSeconds(waitSeconds), cancellationToken);
+                continue;
+            }
+
+            _logger.LogWarning(
+                "CV parsing request failed. StatusCode={StatusCode}. Message={Message}",
+                statusCode,
+                finalMessage);
+            throw new AiServiceException(finalMessage, statusCode, retryAfterSeconds);
         }
 
-        return ParseModelResponse(responseContent);
+        throw new AiServiceException("AI parsing failed after retries.", 502);
     }
 
     private static void ValidateOptions(CvParsingOptions options)
@@ -120,14 +201,51 @@ public sealed class CvParsingService : ICvParsingService
         }
     }
 
-    private static string NormalizeCvTextLength(string text, int maxTextChars)
+    private static string PrepareCvText(string rawText, int maxTextChars)
     {
-        if (maxTextChars <= 0 || text.Length <= maxTextChars)
+        if (string.IsNullOrWhiteSpace(rawText))
         {
-            return text;
+            return string.Empty;
         }
 
-        return text[..maxTextChars];
+        var normalized = rawText.Replace("\r\n", "\n");
+        var paragraphs = normalized
+            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(CleanParagraph)
+            .Where(p => p.Length > 0)
+            .ToArray();
+
+        if (paragraphs.Length == 0)
+        {
+            return TrimToMax(CleanParagraph(normalized), maxTextChars);
+        }
+
+        var selectedParagraphs = new List<string>();
+
+        // Keep first 2 paragraphs (contact + headline are usually here).
+        selectedParagraphs.AddRange(paragraphs.Take(2));
+
+        foreach (var paragraph in paragraphs)
+        {
+            if (selectedParagraphs.Contains(paragraph, StringComparer.Ordinal))
+            {
+                continue;
+            }
+
+            if (ShouldKeepParagraph(paragraph))
+            {
+                selectedParagraphs.Add(paragraph);
+            }
+        }
+
+        // Fallback if filtering is too aggressive.
+        if (selectedParagraphs.Sum(p => p.Length) < 600)
+        {
+            selectedParagraphs = paragraphs.Take(20).ToList();
+        }
+
+        var merged = string.Join("\n\n", selectedParagraphs);
+        return TrimToMax(merged, maxTextChars);
     }
 
     private static ParsedCandidateProfile ParseModelResponse(string responseContent)
@@ -217,6 +335,125 @@ public sealed class CvParsingService : ICvParsingService
         }
 
         return string.Join('\n', lines.Skip(1).SkipLast(1)).Trim();
+    }
+
+    private static int? ExtractRetryAfterSeconds(HttpResponseMessage response)
+    {
+        if (response.Headers.RetryAfter?.Delta is not null)
+        {
+            return Math.Max(1, (int)Math.Ceiling(response.Headers.RetryAfter.Delta.Value.TotalSeconds));
+        }
+
+        if (response.Headers.TryGetValues("x-ratelimit-reset-requests", out var values))
+        {
+            var raw = values.FirstOrDefault();
+            if (int.TryParse(raw, out var parsed))
+            {
+                return Math.Max(1, parsed);
+            }
+        }
+
+        return null;
+    }
+
+    private static string ExtractServiceErrorMessage(string responseContent)
+    {
+        if (string.IsNullOrWhiteSpace(responseContent))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            using var json = JsonDocument.Parse(responseContent);
+
+            if (json.RootElement.TryGetProperty("error", out var errorNode))
+            {
+                if (errorNode.ValueKind == JsonValueKind.String)
+                {
+                    return errorNode.GetString() ?? string.Empty;
+                }
+
+                if (errorNode.ValueKind == JsonValueKind.Object &&
+                    errorNode.TryGetProperty("message", out var messageNode) &&
+                    messageNode.ValueKind == JsonValueKind.String)
+                {
+                    return messageNode.GetString() ?? string.Empty;
+                }
+            }
+        }
+        catch
+        {
+            // ignore parse errors and fall through
+        }
+
+        return string.Empty;
+    }
+
+    private static string BuildErrorMessage(int statusCode, string serviceMessage)
+    {
+        if (statusCode == 429)
+        {
+            var suffix = string.IsNullOrWhiteSpace(serviceMessage) ? string.Empty : $" Details: {serviceMessage}";
+            return $"Azure OpenAI rate limit reached. Please wait and retry.{suffix}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(serviceMessage))
+        {
+            return $"Azure OpenAI request failed ({statusCode}): {serviceMessage}";
+        }
+
+        return $"Azure OpenAI request failed ({statusCode}).";
+    }
+
+    private static bool ShouldKeepParagraph(string paragraph)
+    {
+        var lower = paragraph.ToLowerInvariant();
+
+        if (Regex.IsMatch(paragraph, @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", RegexOptions.IgnoreCase))
+        {
+            return true;
+        }
+
+        if (Regex.IsMatch(paragraph, @"\+?\d[\d\s().-]{6,}"))
+        {
+            return true;
+        }
+
+        if (lower.Contains("http://") || lower.Contains("https://") || lower.Contains("linkedin.com"))
+        {
+            return true;
+        }
+
+        if (RelevantParagraphMarkers.Any(marker => lower.Contains(marker)))
+        {
+            return true;
+        }
+
+        // Drop obvious noise that frequently appears in CV footers.
+        if (lower.Contains("references available") || lower.Contains("curriculum vitae"))
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    private static string CleanParagraph(string paragraph)
+    {
+        var cleaned = Regex.Replace(paragraph, @"[ \t]+", " ");
+        cleaned = Regex.Replace(cleaned, @"\n{3,}", "\n\n");
+        return cleaned.Trim();
+    }
+
+    private static string TrimToMax(string text, int maxTextChars)
+    {
+        if (maxTextChars <= 0 || text.Length <= maxTextChars)
+        {
+            return text;
+        }
+
+        return text[..maxTextChars];
     }
 
     private static ParsedCandidateProfile BuildMockProfile(string cvText)

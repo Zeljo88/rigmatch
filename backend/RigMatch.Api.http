@@ -1,7 +1,8 @@
 @RigMatch.Api_HostAddress = http://localhost:5168
 
-### Upload CV file (PDF/DOC/DOCX)
-POST {{RigMatch.Api_HostAddress}}/cv/upload
+### Company: Upload single CV (PDF) and parse draft
+POST {{RigMatch.Api_HostAddress}}/company/cv/upload
+X-Company-Id: rigmatch-demo-company
 Content-Type: multipart/form-data; boundary=RigMatchBoundary
 
 --RigMatchBoundary
@@ -11,32 +12,24 @@ Content-Type: application/pdf
 < ./sample.pdf
 --RigMatchBoundary--
 
-### Extract text from PDF CV (Day 2)
-POST {{RigMatch.Api_HostAddress}}/cv/extract-text
-Content-Type: multipart/form-data; boundary=RigMatchBoundary
-
---RigMatchBoundary
-Content-Disposition: form-data; name="file"; filename="sample.pdf"
-Content-Type: application/pdf
-
-< ./sample.pdf
---RigMatchBoundary--
-
-### Parse CV from uploaded PDF (Day 3)
-POST {{RigMatch.Api_HostAddress}}/cv/parse
-Content-Type: multipart/form-data; boundary=RigMatchBoundary
-
---RigMatchBoundary
-Content-Disposition: form-data; name="file"; filename="sample.pdf"
-Content-Type: application/pdf
-
-< ./sample.pdf
---RigMatchBoundary--
-
-### Parse CV from raw text (Day 3)
-POST {{RigMatch.Api_HostAddress}}/cv/parse-text
+### Company: Save final edited profile JSON
+POST {{RigMatch.Api_HostAddress}}/company/cv/{{cvId}}/save
+X-Company-Id: rigmatch-demo-company
 Content-Type: application/json
 
 {
-  "cvText": "John Doe\njohn.doe@example.com\nSenior Software Engineer with 8 years of experience in .NET, Azure, SQL, and Angular."
+  "finalProfile": {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "jobTitles": ["Senior Software Engineer"],
+    "companies": ["Contoso"],
+    "skills": [".NET", "Azure"],
+    "certifications": ["AZ-204"],
+    "experienceYears": 8,
+    "experiences": []
+  }
 }
+
+### Company: List saved CVs
+GET {{RigMatch.Api_HostAddress}}/company/cvs
+X-Company-Id: rigmatch-demo-company

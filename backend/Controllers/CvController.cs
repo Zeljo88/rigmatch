@@ -126,6 +126,14 @@ public class CvController : ControllerBase
         {
             parsedProfile = await _cvParsingService.ParseCvTextAsync(extractedText, cancellationToken);
         }
+        catch (AiServiceException ex) when (ex.StatusCode == 429)
+        {
+            return StatusCode(429, new { message = ex.Message, retryAfterSeconds = ex.RetryAfterSeconds });
+        }
+        catch (AiServiceException ex)
+        {
+            return StatusCode(502, new { message = ex.Message });
+        }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning(ex, "CV parsing configuration is invalid.");
@@ -159,6 +167,14 @@ public class CvController : ControllerBase
         {
             var parsedProfile = await _cvParsingService.ParseCvTextAsync(request.CvText, cancellationToken);
             return Ok(parsedProfile);
+        }
+        catch (AiServiceException ex) when (ex.StatusCode == 429)
+        {
+            return StatusCode(429, new { message = ex.Message, retryAfterSeconds = ex.RetryAfterSeconds });
+        }
+        catch (AiServiceException ex)
+        {
+            return StatusCode(502, new { message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
