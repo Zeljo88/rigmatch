@@ -1,0 +1,18 @@
+# General
+.DS_Store
+Thumbs.db
+
+# .NET
+**/bin/
+**/obj/
+
+# Angular / Node
+**/node_modules/
+frontend/.angular/
+
+# Local uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Local tooling
+.vscode/

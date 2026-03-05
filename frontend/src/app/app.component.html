@@ -1,0 +1,50 @@
+<main class="page">
+  <section class="panel">
+    <h1>RigMatch CV Upload</h1>
+    <p class="subtitle">Day 1 MVP: upload your CV to start profile parsing.</p>
+
+    <label class="file-picker">
+      <span>Select CV file (PDF, DOC, DOCX, max 10MB)</span>
+      <input type="file" accept=".pdf,.doc,.docx" (change)="onFileSelected($event)" />
+    </label>
+
+    <p class="selected" *ngIf="selectedFile">
+      Selected: <strong>{{ selectedFile.name }}</strong> ({{ selectedFile.size | number }} bytes)
+    </p>
+
+    <div class="actions">
+      <button
+        type="button"
+        data-testid="upload-button"
+        (click)="uploadCv()"
+        [disabled]="!selectedFile || isUploading">
+        {{ isUploading ? 'Uploading...' : 'Upload CV' }}
+      </button>
+
+      <button
+        type="button"
+        data-testid="extract-button"
+        class="secondary"
+        (click)="extractTextFromCv()"
+        [disabled]="!selectedFile || isExtracting">
+        {{ isExtracting ? 'Extracting...' : 'Extract Text (PDF)' }}
+      </button>
+    </div>
+
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="result" *ngIf="uploadResult">
+      <h2>Upload successful</h2>
+      <p><strong>Original file:</strong> {{ uploadResult.originalFileName }}</p>
+      <p><strong>Stored as:</strong> {{ uploadResult.storagePath }}</p>
+      <p><strong>Uploaded (UTC):</strong> {{ uploadResult.uploadedAtUtc | date:'medium' }}</p>
+    </div>
+
+    <div class="result extraction" *ngIf="extractionResult">
+      <h2>Text extraction successful</h2>
+      <p><strong>Characters:</strong> {{ extractionResult.characterCount }}</p>
+      <p><strong>Extracted (UTC):</strong> {{ extractionResult.extractedAtUtc | date:'medium' }}</p>
+      <pre>{{ extractionResult.extractedText }}</pre>
+    </div>
+  </section>
+</main>
