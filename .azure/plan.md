@@ -8,7 +8,7 @@ Generated: 2026-03-05T00:00:00+01:00
 
 ## 1. Project Overview
 
-**Goal:** Build Day 1-3 of RigMatch MVP: CV upload, PDF text extraction, and AI CV parsing workflow.
+**Goal:** Build Day 1-6 of RigMatch MVP with company focus: single CV upload, parsed edit/save flow, and company CV library listing.
 
 **Path:** New Project
 
@@ -114,7 +114,7 @@ Pending.
 
 ## 9. Next Steps
 
-> Current: Day 3 implementation complete, Day 4 editable profile UI next
+> Current: Day 6 company CV library workflow complete, Day 7 polish and resilience next
 
-1. Start Day 4 by displaying parsed profile fields in an editable form.
+1. Start Day 7 by adding loading/error polish and validation for company library workflow.
 2. Stabilize frontend runtime by aligning Node version with Angular support matrix.

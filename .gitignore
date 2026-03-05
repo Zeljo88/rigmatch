@@ -14,5 +14,10 @@ frontend/.angular/
 backend/uploads/*
 !backend/uploads/.gitkeep
 
+# Local SQLite dev databases
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal
+
 # Local tooling
 .vscode/

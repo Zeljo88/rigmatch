@@ -1,50 +1,326 @@
 <main class="page">
   <section class="panel">
-    <h1>RigMatch CV Upload</h1>
-    <p class="subtitle">Day 1 MVP: upload your CV to start profile parsing.</p>
+    <h1>RigMatch Company CV Workspace</h1>
+    <p class="subtitle">Upload one CV, review parsed data, save to your company CV library, then search records.</p>
 
-    <label class="file-picker">
-      <span>Select CV file (PDF, DOC, DOCX, max 10MB)</span>
-      <input type="file" accept=".pdf,.doc,.docx" (change)="onFileSelected($event)" />
-    </label>
-
-    <p class="selected" *ngIf="selectedFile">
-      Selected: <strong>{{ selectedFile.name }}</strong> ({{ selectedFile.size | number }} bytes)
-    </p>
-
-    <div class="actions">
+    <nav class="page-nav">
+      <button type="button" class="tab" [class.active]="activePage === 'upload'" (click)="setPage('upload')">Upload CV</button>
+      <button type="button" class="tab" [class.active]="activePage === 'edit'" (click)="setPage('edit')">Edit Parsed Data</button>
+      <button type="button" class="tab" [class.active]="activePage === 'library'" (click)="setPage('library')">CV Library</button>
       <button
         type="button"
-        data-testid="upload-button"
+        class="tab"
+        [class.active]="activePage === 'detail'"
+        [disabled]="!selectedCvDetail"
+        (click)="setPage('detail')">
+        CV Details
+      </button>
+    </nav>
+
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+
+    <section *ngIf="activePage === 'upload'" class="section">
+      <label class="file-picker">
+        <span>Select one CV file (PDF, max 10MB)</span>
+        <input type="file" accept=".pdf" (change)="onFileSelected($event)" />
+      </label>
+
+      <p class="selected" *ngIf="selectedFile">
+        Selected: <strong>{{ selectedFile.name }}</strong> ({{ selectedFile.size | number }} bytes)
+      </p>
+
+      <button
+        type="button"
+        class="primary"
+        data-testid="company-upload-button"
         (click)="uploadCv()"
         [disabled]="!selectedFile || isUploading">
         {{ isUploading ? 'Uploading...' : 'Upload CV' }}
       </button>
+    </section>
+
+    <form *ngIf="activePage === 'edit'" class="profile-form" (submit)="$event.preventDefault()">
+      <h2>Edit Parsed Data</h2>
+      <p class="hint" *ngIf="currentCvId">CV Record ID: {{ currentCvId }}</p>
+      <p class="hint" *ngIf="uploadedFileUrl">File: {{ uploadedFileUrl }}</p>
+
+      <label>
+        Full Name
+        <input type="text" name="fullName" [(ngModel)]="editableProfile.name" />
+      </label>
+
+      <label>
+        Email
+        <input type="email" name="email" [(ngModel)]="editableProfile.email" />
+      </label>
+
+      <label>
+        Location
+        <input type="text" name="location" [(ngModel)]="editableProfile.location" />
+      </label>
+
+      <label>
+        Years of Experience
+        <input type="number" min="0" name="experienceYears" [(ngModel)]="editableProfile.experienceYears" />
+      </label>
+
+      <label>
+        Job Titles (comma separated)
+        <input
+          type="text"
+          name="jobTitles"
+          [(ngModel)]="jobTitlesInput"
+          (ngModelChange)="onListInputChanged('jobTitles', $event)" />
+      </label>
+
+      <label>
+        Companies (comma separated)
+        <input
+          type="text"
+          name="companies"
+          [(ngModel)]="companiesInput"
+          (ngModelChange)="onListInputChanged('companies', $event)" />
+      </label>
+
+      <label>
+        Skills
+        <div class="item-editor">
+          <input
+            type="text"
+            name="newSkill"
+            placeholder="Add skill"
+            [(ngModel)]="newSkillInput" />
+          <button type="button" class="mini" data-testid="add-skill-button" (click)="addSkill()">Add Skill</button>
+        </div>
+        <div class="chip-list" *ngIf="editableProfile.skills.length > 0">
+          <div class="chip" *ngFor="let skill of editableProfile.skills; index as i">
+            <span>{{ skill }}</span>
+            <button type="button" class="chip-remove" (click)="removeSkill(i)">x</button>
+          </div>
+        </div>
+      </label>
+
+      <label>
+        Certifications
+        <div class="item-editor">
+          <input
+            type="text"
+            name="newCertification"
+            placeholder="Add certification"
+            [(ngModel)]="newCertificationInput" />
+          <button
+            type="button"
+            class="mini"
+            data-testid="add-certification-button"
+            (click)="addCertification()">Add Certification</button>
+        </div>
+        <div class="chip-list" *ngIf="editableProfile.certifications.length > 0">
+          <div class="chip" *ngFor="let cert of editableProfile.certifications; index as i">
+            <span>{{ cert }}</span>
+            <button type="button" class="chip-remove" (click)="removeCertification(i)">x</button>
+          </div>
+        </div>
+      </label>
+
+      <div class="experience-section">
+        <div class="experience-header">
+          <h3>Experience</h3>
+          <button type="button" class="mini" data-testid="add-experience-button" (click)="addExperience()">Add Experience</button>
+        </div>
+
+        <div class="experience-card" *ngFor="let experience of editableProfile.experiences; index as i">
+          <div class="experience-card-header">
+            <strong>Experience {{ i + 1 }}</strong>
+            <button type="button" class="chip-remove" (click)="removeExperience(i)">x</button>
+          </div>
+
+          <label>
+            Company
+            <input type="text" [name]="'experienceCompany' + i" [(ngModel)]="experience.companyName" />
+          </label>
+
+          <label>
+            Role
+            <input type="text" [name]="'experienceRole' + i" [(ngModel)]="experience.role" />
+          </label>
+
+          <div class="experience-dates">
+            <label>
+              Start Date
+              <input type="month" [name]="'experienceStart' + i" [(ngModel)]="experience.startDate" />
+            </label>
+
+            <label>
+              End Date
+              <input type="month" [name]="'experienceEnd' + i" [(ngModel)]="experience.endDate" />
+            </label>
+          </div>
+
+          <label>
+            Description
+            <textarea [name]="'experienceDescription' + i" rows="3" [(ngModel)]="experience.description"></textarea>
+          </label>
+        </div>
+      </div>
 
       <button
         type="button"
-        data-testid="extract-button"
-        class="secondary"
-        (click)="extractTextFromCv()"
-        [disabled]="!selectedFile || isExtracting">
-        {{ isExtracting ? 'Extracting...' : 'Extract Text (PDF)' }}
+        class="primary"
+        data-testid="company-save-button"
+        (click)="saveCv()"
+        [disabled]="!currentCvId || isSaving">
+        {{ isSaving ? 'Saving...' : 'Save to Company Library' }}
       </button>
-    </div>
+    </form>
 
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <section *ngIf="activePage === 'library'" class="section">
+      <div class="library-header">
+        <h2>Company CV Library</h2>
+        <button type="button" class="mini" (click)="loadLibrary()" [disabled]="isLoadingLibrary">
+          {{ isLoadingLibrary ? 'Loading...' : 'Refresh' }}
+        </button>
+      </div>
 
-    <div class="result" *ngIf="uploadResult">
-      <h2>Upload successful</h2>
-      <p><strong>Original file:</strong> {{ uploadResult.originalFileName }}</p>
-      <p><strong>Stored as:</strong> {{ uploadResult.storagePath }}</p>
-      <p><strong>Uploaded (UTC):</strong> {{ uploadResult.uploadedAtUtc | date:'medium' }}</p>
-    </div>
+      <div class="search-grid">
+        <label>
+          Search
+          <input
+            type="text"
+            name="searchQuery"
+            placeholder="IWCF, Operator, HPHT..."
+            [(ngModel)]="searchQuery" />
+        </label>
 
-    <div class="result extraction" *ngIf="extractionResult">
-      <h2>Text extraction successful</h2>
-      <p><strong>Characters:</strong> {{ extractionResult.characterCount }}</p>
-      <p><strong>Extracted (UTC):</strong> {{ extractionResult.extractedAtUtc | date:'medium' }}</p>
-      <pre>{{ extractionResult.extractedText }}</pre>
-    </div>
+        <label>
+          Min Experience
+          <input type="number" min="0" name="minExp" [(ngModel)]="minExpFilter" />
+        </label>
+
+        <label>
+          Location Contains
+          <input type="text" name="locationFilter" [(ngModel)]="locationFilter" />
+        </label>
+
+        <label>
+          Certification Contains
+          <input type="text" name="certFilter" [(ngModel)]="certFilter" />
+        </label>
+
+        <div class="search-actions">
+          <button type="button" class="mini" (click)="searchLibrary()" [disabled]="isLoadingLibrary">Search</button>
+          <button type="button" class="mini secondary" (click)="clearLibraryFilters()" [disabled]="isLoadingLibrary">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <table class="library-table" *ngIf="cvLibrary.length > 0; else emptyState">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Latest Title</th>
+            <th>Location</th>
+            <th>Experience Years</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of cvLibrary">
+            <td>{{ item.name }}</td>
+            <td>{{ item.latestTitle }}</td>
+            <td>{{ item.location || 'N/A' }}</td>
+            <td>{{ item.experienceYears ?? 'N/A' }}</td>
+            <td>{{ item.createdAtUtc | date:'mediumDate' }}</td>
+            <td>
+              <button type="button" class="mini" (click)="openCvDetail(item.id)" [disabled]="isLoadingDetail">
+                View
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #emptyState>
+        <p class="hint">No CV records saved for this company yet.</p>
+      </ng-template>
+    </section>
+
+    <section *ngIf="activePage === 'detail' && selectedCvDetail as detail" class="section">
+      <div class="library-header">
+        <h2>CV Record Details</h2>
+        <div class="detail-actions">
+          <button type="button" class="mini secondary" (click)="setPage('library')">Back to Library</button>
+          <button type="button" class="mini" (click)="editSelectedCv()">Edit</button>
+        </div>
+      </div>
+
+      <div class="detail-meta">
+        <p><strong>ID:</strong> {{ detail.id }}</p>
+        <p><strong>Status:</strong> {{ detail.isFinalized ? 'Finalized' : 'Draft' }}</p>
+        <p><strong>Created:</strong> {{ detail.createdAtUtc | date:'medium' }}</p>
+        <p *ngIf="detail.updatedAtUtc"><strong>Updated:</strong> {{ detail.updatedAtUtc | date:'medium' }}</p>
+      </div>
+
+      <a class="download-link" [href]="apiBaseUrl + detail.downloadUrl" target="_blank" rel="noopener">
+        Download PDF
+      </a>
+
+      <div class="detail-grid">
+        <div><strong>Name:</strong> {{ detail.structuredProfile.name || 'N/A' }}</div>
+        <div><strong>Email:</strong> {{ detail.structuredProfile.email || 'N/A' }}</div>
+        <div><strong>Location:</strong> {{ detail.structuredProfile.location || 'N/A' }}</div>
+        <div><strong>Experience Years:</strong> {{ detail.structuredProfile.experienceYears ?? 'N/A' }}</div>
+      </div>
+
+      <div class="detail-block">
+        <h3>Job Titles</h3>
+        <div class="chip-list" *ngIf="(detail.structuredProfile.jobTitles?.length ?? 0) > 0; else noTitles">
+          <div class="chip" *ngFor="let title of detail.structuredProfile.jobTitles">{{ title }}</div>
+        </div>
+        <ng-template #noTitles><p class="hint">No job titles recorded.</p></ng-template>
+      </div>
+
+      <div class="detail-block">
+        <h3>Companies</h3>
+        <div class="chip-list" *ngIf="(detail.structuredProfile.companies?.length ?? 0) > 0; else noCompanies">
+          <div class="chip" *ngFor="let company of detail.structuredProfile.companies">{{ company }}</div>
+        </div>
+        <ng-template #noCompanies><p class="hint">No companies recorded.</p></ng-template>
+      </div>
+
+      <div class="detail-block">
+        <h3>Skills</h3>
+        <div class="chip-list" *ngIf="(detail.structuredProfile.skills?.length ?? 0) > 0; else noSkills">
+          <div class="chip" *ngFor="let skill of detail.structuredProfile.skills">{{ skill }}</div>
+        </div>
+        <ng-template #noSkills><p class="hint">No skills recorded.</p></ng-template>
+      </div>
+
+      <div class="detail-block">
+        <h3>Certifications</h3>
+        <div class="chip-list" *ngIf="(detail.structuredProfile.certifications?.length ?? 0) > 0; else noCerts">
+          <div class="chip" *ngFor="let cert of detail.structuredProfile.certifications">{{ cert }}</div>
+        </div>
+        <ng-template #noCerts><p class="hint">No certifications recorded.</p></ng-template>
+      </div>
+
+      <div class="detail-block">
+        <h3>Experience Entries</h3>
+        <div class="experience-card" *ngFor="let experience of detail.structuredProfile.experiences; index as i">
+          <div class="experience-card-header">
+            <strong>Experience {{ i + 1 }}</strong>
+          </div>
+          <p><strong>Company:</strong> {{ experience.companyName || 'N/A' }}</p>
+          <p><strong>Role:</strong> {{ experience.role || 'N/A' }}</p>
+          <p><strong>Period:</strong> {{ experience.startDate || 'N/A' }} - {{ experience.endDate || 'N/A' }}</p>
+          <p><strong>Description:</strong> {{ experience.description || 'N/A' }}</p>
+        </div>
+        <p class="hint" *ngIf="(detail.structuredProfile.experiences?.length ?? 0) === 0">
+          No experience entries recorded.
+        </p>
+      </div>
+    </section>
   </section>
 </main>
