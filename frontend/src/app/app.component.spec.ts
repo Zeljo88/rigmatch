@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [AppComponent, NoopAnimationsModule],
       providers: [provideHttpClientTesting()]
     }).compileComponents();
   });
@@ -26,24 +27,30 @@ describe('AppComponent', () => {
     expect(uploadButton?.hasAttribute('disabled')).toBeTrue();
   });
 
-  it('should add a skill manually', () => {
+  it('should switch to settings page', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
 
-    app.newSkillInput = 'Go';
-    app.addSkill();
+    app.setPage('settings');
 
-    expect(app.editableProfile.skills).toContain('Go');
+    expect(app.activePage).toBe('settings');
   });
 
-  it('should add and remove manual experience entries', () => {
+  it('should clear filters', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
+    spyOn(app, 'loadLibrary').and.stub();
 
-    app.addExperience();
-    expect(app.editableProfile.experiences.length).toBe(1);
+    app.searchQuery = 'Operator';
+    app.minExpFilter = 5;
+    app.locationFilter = 'Dubai';
+    app.certFilter = 'IWCF';
 
-    app.removeExperience(0);
-    expect(app.editableProfile.experiences.length).toBe(0);
+    app.clearFilters();
+
+    expect(app.searchQuery).toBe('');
+    expect(app.minExpFilter).toBeNull();
+    expect(app.locationFilter).toBe('');
+    expect(app.certFilter).toBe('');
   });
 });

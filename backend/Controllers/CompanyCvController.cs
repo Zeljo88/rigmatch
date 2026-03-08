@@ -21,10 +21,16 @@ public class CompanyCvController : ControllerBase
         PropertyNameCaseInsensitive = true
     };
 
+    private static readonly JsonSerializerOptions StorageJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     private readonly RigMatchDbContext _dbContext;
     private readonly IWebHostEnvironment _environment;
     private readonly ICvTextExtractionService _cvTextExtractionService;
     private readonly ICvParsingService _cvParsingService;
+    private readonly IRoleStandardizationService _roleStandardizationService;
     private readonly ILogger<CompanyCvController> _logger;
 
     public CompanyCvController(
@@ -32,12 +38,14 @@ public class CompanyCvController : ControllerBase
         IWebHostEnvironment environment,
         ICvTextExtractionService cvTextExtractionService,
         ICvParsingService cvParsingService,
+        IRoleStandardizationService roleStandardizationService,
         ILogger<CompanyCvController> logger)
     {
         _dbContext = dbContext;
         _environment = environment;
         _cvTextExtractionService = cvTextExtractionService;
         _cvParsingService = cvParsingService;
+        _roleStandardizationService = roleStandardizationService;
         _logger = logger;
     }
 
@@ -91,7 +99,7 @@ public class CompanyCvController : ControllerBase
             Id = Guid.NewGuid(),
             CompanyId = company.Id,
             FileUrl = storedFile.StoragePath,
-            ParsedDraftJson = JsonSerializer.Serialize(parsedProfile),
+            ParsedDraftJson = JsonSerializer.Serialize(parsedProfile, StorageJsonOptions),
             CreatedAtUtc = DateTimeOffset.UtcNow
         };
 
@@ -126,7 +134,7 @@ public class CompanyCvController : ControllerBase
             return NotFound(new { message = "CV record not found for this company." });
         }
 
-        record.FinalJson = request.FinalProfile.GetRawText();
+        record.FinalJson = await NormalizeAndSerializeFinalProfileAsync(request.FinalProfile, cancellationToken);
         record.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -134,12 +142,48 @@ public class CompanyCvController : ControllerBase
         return Ok(new { id = record.Id, savedAtUtc = record.UpdatedAtUtc });
     }
 
+    [HttpDelete("cv/{id:guid}")]
+    public async Task<IActionResult> DeleteCompanyCv(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        var company = await GetOrCreateCompanyAsync(cancellationToken);
+
+        var record = await _dbContext.CvRecords
+            .FirstOrDefaultAsync(r => r.Id == id && r.CompanyId == company.Id, cancellationToken);
+
+        if (record is null)
+        {
+            return NotFound(new { message = "CV record not found for this company." });
+        }
+
+        var normalizedRelativePath = record.FileUrl.Replace('/', Path.DirectorySeparatorChar);
+        var absolutePath = Path.Combine(_environment.ContentRootPath, normalizedRelativePath);
+
+        _dbContext.CvRecords.Remove(record);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        if (System.IO.File.Exists(absolutePath))
+        {
+            try
+            {
+                System.IO.File.Delete(absolutePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete stored file for CV record {CvId}.", record.Id);
+            }
+        }
+
+        return NoContent();
+    }
+
     [HttpGet("cvs")]
     public async Task<ActionResult<IReadOnlyList<CompanyCvListItem>>> ListCompanyCvs(CancellationToken cancellationToken)
     {
         var company = await GetOrCreateCompanyAsync(cancellationToken);
 
-        var list = await BuildCompanyCvListAsync(company.Id, null, null, null, null, cancellationToken);
+        var list = await BuildCompanyCvListAsync(company.Id, null, null, null, null, null, cancellationToken);
 
         return Ok(list);
     }
@@ -148,13 +192,23 @@ public class CompanyCvController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<CompanyCvListItem>>> SearchCompanyCvs(
         [FromQuery] string? q,
         [FromQuery] int? minExp,
+        [FromQuery] string? education,
         [FromQuery] string? location,
         [FromQuery] string? cert,
+        [FromQuery] bool? needsReview,
         CancellationToken cancellationToken)
     {
         var company = await GetOrCreateCompanyAsync(cancellationToken);
-        var list = await BuildCompanyCvListAsync(company.Id, q, minExp, location, cert, cancellationToken);
+        var educationFilter = !string.IsNullOrWhiteSpace(education) ? education : location;
+        var list = await BuildCompanyCvListAsync(company.Id, q, minExp, educationFilter, cert, needsReview, cancellationToken);
         return Ok(list);
+    }
+
+    [HttpGet("roles/standard")]
+    public async Task<ActionResult<IReadOnlyList<string>>> GetStandardRoles(CancellationToken cancellationToken)
+    {
+        var roles = await _roleStandardizationService.GetStandardRolesAsync(cancellationToken);
+        return Ok(roles);
     }
 
     [HttpGet("cvs/{id:guid}")]
@@ -298,8 +352,9 @@ public class CompanyCvController : ControllerBase
         Guid companyId,
         string? q,
         int? minExp,
-        string? location,
+        string? education,
         string? cert,
+        bool? needsReview,
         CancellationToken cancellationToken)
     {
         var records = await _dbContext.CvRecords
@@ -328,10 +383,10 @@ public class CompanyCvController : ControllerBase
             rows = rows.Where(row => (row.Snapshot?.ExperienceYears ?? 0) >= minExp.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(location))
+        if (!string.IsNullOrWhiteSpace(education))
         {
-            var locationNeedle = location.Trim();
-            rows = rows.Where(row => Contains(row.Snapshot?.Location, locationNeedle));
+            var educationNeedle = education.Trim();
+            rows = rows.Where(row => Contains(row.Snapshot?.HighestEducation, educationNeedle));
         }
 
         if (!string.IsNullOrWhiteSpace(cert))
@@ -340,13 +395,20 @@ public class CompanyCvController : ControllerBase
             rows = rows.Where(row => ContainsAny(row.Snapshot?.Certifications, certNeedle));
         }
 
+        if (needsReview.HasValue)
+        {
+            rows = needsReview.Value
+                ? rows.Where(row => row.Snapshot?.Experiences?.Any(exp => exp.NeedsReview) ?? false)
+                : rows.Where(row => !(row.Snapshot?.Experiences?.Any(exp => exp.NeedsReview) ?? false));
+        }
+
         return rows
             .OrderByDescending(row => row.Record.CreatedAtUtc)
             .Select(row => new CompanyCvListItem(
                 row.Record.Id,
                 row.Snapshot?.Name ?? "Unknown candidate",
                 row.Snapshot?.JobTitles?.FirstOrDefault() ?? "N/A",
-                row.Snapshot?.Location,
+                row.Snapshot?.HighestEducation,
                 row.Snapshot?.ExperienceYears,
                 row.Record.CreatedAtUtc,
                 !string.IsNullOrWhiteSpace(row.Record.FinalJson)))
@@ -362,6 +424,115 @@ public class CompanyCvController : ControllerBase
     private static bool ContainsAny(IEnumerable<string>? values, string search)
     {
         return values?.Any(v => Contains(v, search)) ?? false;
+    }
+
+    private async Task<string> NormalizeAndSerializeFinalProfileAsync(
+        JsonElement finalProfile,
+        CancellationToken cancellationToken)
+    {
+        var payload = JsonSerializer.Deserialize<EditableProfilePayload>(finalProfile.GetRawText(), JsonOptions)
+                      ?? new EditableProfilePayload();
+
+        var experiences = await NormalizeExperiencesAsync(payload.Experiences, cancellationToken);
+
+        var normalized = new NormalizedProfilePayload(
+            (payload.Name ?? string.Empty).Trim(),
+            (payload.Email ?? string.Empty).Trim(),
+            (payload.PhoneNumber ?? string.Empty).Trim(),
+            (payload.HighestEducation ?? string.Empty).Trim(),
+            (payload.Location ?? string.Empty).Trim(),
+            await NormalizeRolesAsync(payload.JobTitles, experiences, cancellationToken),
+            NormalizeList(payload.Companies),
+            NormalizeList(payload.Skills),
+            NormalizeList(payload.Certifications),
+            (int)Math.Round(Math.Max(payload.ExperienceYears ?? 0d, 0d), MidpointRounding.AwayFromZero),
+            experiences,
+            RoleExperienceCalculator.Calculate(experiences));
+
+        return JsonSerializer.Serialize(normalized, StorageJsonOptions);
+    }
+
+    private async Task<IReadOnlyList<string>> NormalizeRolesAsync(
+        IEnumerable<string>? rolesFromPayload,
+        IReadOnlyList<ParsedExperienceEntry> normalizedExperiences,
+        CancellationToken cancellationToken)
+    {
+        var direct = await _roleStandardizationService.StandardizeRoleListAsync(rolesFromPayload, cancellationToken);
+        if (direct.Count > 0)
+        {
+            return direct;
+        }
+
+        return await _roleStandardizationService.StandardizeRoleListAsync(
+            normalizedExperiences.Select(exp => exp.StandardRoleName),
+            cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<ParsedExperienceEntry>> NormalizeExperiencesAsync(
+        IEnumerable<EditableExperiencePayload>? experiences,
+        CancellationToken cancellationToken)
+    {
+        if (experiences is null)
+        {
+            return [];
+        }
+
+        var normalized = new List<ParsedExperienceEntry>();
+        foreach (var exp in experiences)
+        {
+            var rawRole = (exp.RawRoleTitle ?? exp.Role ?? string.Empty).Trim();
+            var roleToMatch = (exp.StandardRoleName ?? exp.Role ?? rawRole).Trim();
+            var match = await _roleStandardizationService.MatchRoleAsync(roleToMatch, cancellationToken);
+
+            var standardizedRoleId = match.StandardRoleId;
+            var standardizedRoleName = match.StandardRoleName;
+            var matchConfidence = match.MatchConfidence;
+            var needsReview = match.NeedsReview;
+            var reviewedByUser = exp.ReviewedByUser;
+
+            if (!string.IsNullOrWhiteSpace(exp.StandardRoleName) && reviewedByUser)
+            {
+                var reviewedMatch = await _roleStandardizationService.MatchRoleAsync(exp.StandardRoleName, cancellationToken);
+                standardizedRoleId = reviewedMatch.StandardRoleId;
+                standardizedRoleName = reviewedMatch.StandardRoleName;
+                matchConfidence = Math.Max(reviewedMatch.MatchConfidence, 0.99d);
+                needsReview = false;
+            }
+
+            var item = new ParsedExperienceEntry(
+                (exp.CompanyName ?? string.Empty).Trim(),
+                rawRole,
+                standardizedRoleId,
+                standardizedRoleName,
+                matchConfidence,
+                needsReview,
+                reviewedByUser,
+                (exp.StartDate ?? string.Empty).Trim(),
+                (exp.EndDate ?? string.Empty).Trim(),
+                (exp.Description ?? string.Empty).Trim());
+
+            if (string.IsNullOrWhiteSpace(item.CompanyName) &&
+                string.IsNullOrWhiteSpace(item.StandardRoleName) &&
+                string.IsNullOrWhiteSpace(item.RawRoleTitle) &&
+                string.IsNullOrWhiteSpace(item.Description))
+            {
+                continue;
+            }
+
+            normalized.Add(item);
+        }
+
+        return normalized;
+    }
+
+    private static IReadOnlyList<string> NormalizeList(IEnumerable<string>? items)
+    {
+        return items?
+                   .Where(item => !string.IsNullOrWhiteSpace(item))
+                   .Select(item => item.Trim())
+                   .Distinct(StringComparer.OrdinalIgnoreCase)
+                   .ToArray()
+               ?? [];
     }
 
     private sealed record StoredFileResult(string AbsolutePath, string StoragePath);
@@ -382,8 +553,83 @@ public class CompanyCvController : ControllerBase
 
         public string? Location { get; set; }
 
+        public string? PhoneNumber { get; set; }
+
+        public string? HighestEducation { get; set; }
+
         public int? ExperienceYears { get; set; }
+
+        public IReadOnlyList<ProfileSnapshotExperience>? Experiences { get; set; }
+    }
+
+    private sealed class ProfileSnapshotExperience
+    {
+        public bool NeedsReview { get; set; }
     }
 
     private sealed record CvRow(CvRecord Record, ProfileSnapshot? Snapshot);
+
+    private sealed class EditableProfilePayload
+    {
+        public string? Name { get; set; }
+
+        public string? Email { get; set; }
+
+        public string? PhoneNumber { get; set; }
+
+        public string? Location { get; set; }
+
+        public string? HighestEducation { get; set; }
+
+        public IReadOnlyList<string>? JobTitles { get; set; }
+
+        public IReadOnlyList<string>? Companies { get; set; }
+
+        public IReadOnlyList<string>? Skills { get; set; }
+
+        public IReadOnlyList<string>? Certifications { get; set; }
+
+        public double? ExperienceYears { get; set; }
+
+        public IReadOnlyList<EditableExperiencePayload>? Experiences { get; set; }
+    }
+
+    private sealed class EditableExperiencePayload
+    {
+        public string? CompanyName { get; set; }
+
+        public string? RawRoleTitle { get; set; }
+
+        public int? StandardRoleId { get; set; }
+
+        public string? StandardRoleName { get; set; }
+
+        public double? MatchConfidence { get; set; }
+
+        public bool NeedsReview { get; set; }
+
+        public bool ReviewedByUser { get; set; }
+
+        public string? Role { get; set; }
+
+        public string? StartDate { get; set; }
+
+        public string? EndDate { get; set; }
+
+        public string? Description { get; set; }
+    }
+
+    private sealed record NormalizedProfilePayload(
+        string Name,
+        string Email,
+        string PhoneNumber,
+        string HighestEducation,
+        string Location,
+        IReadOnlyList<string> JobTitles,
+        IReadOnlyList<string> Companies,
+        IReadOnlyList<string> Skills,
+        IReadOnlyList<string> Certifications,
+        int ExperienceYears,
+        IReadOnlyList<ParsedExperienceEntry> Experiences,
+        IReadOnlyList<RoleExperienceBreakdownItem> RoleExperience);
 }

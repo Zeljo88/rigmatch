@@ -1,326 +1,262 @@
-<main class="page">
-  <section class="panel">
-    <h1>RigMatch Company CV Workspace</h1>
-    <p class="subtitle">Upload one CV, review parsed data, save to your company CV library, then search records.</p>
+<mat-toolbar color="primary" class="toolbar">
+  <span class="brand">RigMatch</span>
+</mat-toolbar>
 
-    <nav class="page-nav">
-      <button type="button" class="tab" [class.active]="activePage === 'upload'" (click)="setPage('upload')">Upload CV</button>
-      <button type="button" class="tab" [class.active]="activePage === 'edit'" (click)="setPage('edit')">Edit Parsed Data</button>
-      <button type="button" class="tab" [class.active]="activePage === 'library'" (click)="setPage('library')">CV Library</button>
-      <button
-        type="button"
-        class="tab"
-        [class.active]="activePage === 'detail'"
-        [disabled]="!selectedCvDetail"
-        (click)="setPage('detail')">
-        CV Details
-      </button>
-    </nav>
+<mat-sidenav-container class="shell">
+  <mat-sidenav #menu mode="side" position="start" opened="true" class="menu">
+    <div class="menu-title">Navigation</div>
+    <button mat-button type="button" class="menu-item" (click)="setPage('upload')">Upload CV</button>
+    <button mat-button type="button" class="menu-item" (click)="setPage('library')">CV Library</button>
+    <button mat-button type="button" class="menu-item" (click)="setPage('settings')">Settings</button>
+  </mat-sidenav>
 
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
-    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+  <mat-sidenav-content>
+    <main class="content">
+      <div class="content-inner">
+        <section *ngIf="activePage === 'upload'" class="page-section">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Upload CV</mat-card-title>
+              <mat-card-subtitle>Upload one PDF CV, parse it, then review in the edit dialog.</mat-card-subtitle>
+            </mat-card-header>
 
-    <section *ngIf="activePage === 'upload'" class="section">
-      <label class="file-picker">
-        <span>Select one CV file (PDF, max 10MB)</span>
-        <input type="file" accept=".pdf" (change)="onFileSelected($event)" />
-      </label>
+            <mat-card-content>
+              <div class="upload-grid">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  (change)="onFileSelected($event)" />
+                <p class="file-name" *ngIf="selectedFile">
+                  Selected: <strong>{{ selectedFile.name }}</strong> ({{ selectedFile.size | number }} bytes)
+                </p>
+              </div>
+            </mat-card-content>
 
-      <p class="selected" *ngIf="selectedFile">
-        Selected: <strong>{{ selectedFile.name }}</strong> ({{ selectedFile.size | number }} bytes)
-      </p>
-
-      <button
-        type="button"
-        class="primary"
-        data-testid="company-upload-button"
-        (click)="uploadCv()"
-        [disabled]="!selectedFile || isUploading">
-        {{ isUploading ? 'Uploading...' : 'Upload CV' }}
-      </button>
-    </section>
-
-    <form *ngIf="activePage === 'edit'" class="profile-form" (submit)="$event.preventDefault()">
-      <h2>Edit Parsed Data</h2>
-      <p class="hint" *ngIf="currentCvId">CV Record ID: {{ currentCvId }}</p>
-      <p class="hint" *ngIf="uploadedFileUrl">File: {{ uploadedFileUrl }}</p>
-
-      <label>
-        Full Name
-        <input type="text" name="fullName" [(ngModel)]="editableProfile.name" />
-      </label>
-
-      <label>
-        Email
-        <input type="email" name="email" [(ngModel)]="editableProfile.email" />
-      </label>
-
-      <label>
-        Location
-        <input type="text" name="location" [(ngModel)]="editableProfile.location" />
-      </label>
-
-      <label>
-        Years of Experience
-        <input type="number" min="0" name="experienceYears" [(ngModel)]="editableProfile.experienceYears" />
-      </label>
-
-      <label>
-        Job Titles (comma separated)
-        <input
-          type="text"
-          name="jobTitles"
-          [(ngModel)]="jobTitlesInput"
-          (ngModelChange)="onListInputChanged('jobTitles', $event)" />
-      </label>
-
-      <label>
-        Companies (comma separated)
-        <input
-          type="text"
-          name="companies"
-          [(ngModel)]="companiesInput"
-          (ngModelChange)="onListInputChanged('companies', $event)" />
-      </label>
-
-      <label>
-        Skills
-        <div class="item-editor">
-          <input
-            type="text"
-            name="newSkill"
-            placeholder="Add skill"
-            [(ngModel)]="newSkillInput" />
-          <button type="button" class="mini" data-testid="add-skill-button" (click)="addSkill()">Add Skill</button>
-        </div>
-        <div class="chip-list" *ngIf="editableProfile.skills.length > 0">
-          <div class="chip" *ngFor="let skill of editableProfile.skills; index as i">
-            <span>{{ skill }}</span>
-            <button type="button" class="chip-remove" (click)="removeSkill(i)">x</button>
-          </div>
-        </div>
-      </label>
-
-      <label>
-        Certifications
-        <div class="item-editor">
-          <input
-            type="text"
-            name="newCertification"
-            placeholder="Add certification"
-            [(ngModel)]="newCertificationInput" />
-          <button
-            type="button"
-            class="mini"
-            data-testid="add-certification-button"
-            (click)="addCertification()">Add Certification</button>
-        </div>
-        <div class="chip-list" *ngIf="editableProfile.certifications.length > 0">
-          <div class="chip" *ngFor="let cert of editableProfile.certifications; index as i">
-            <span>{{ cert }}</span>
-            <button type="button" class="chip-remove" (click)="removeCertification(i)">x</button>
-          </div>
-        </div>
-      </label>
-
-      <div class="experience-section">
-        <div class="experience-header">
-          <h3>Experience</h3>
-          <button type="button" class="mini" data-testid="add-experience-button" (click)="addExperience()">Add Experience</button>
-        </div>
-
-        <div class="experience-card" *ngFor="let experience of editableProfile.experiences; index as i">
-          <div class="experience-card-header">
-            <strong>Experience {{ i + 1 }}</strong>
-            <button type="button" class="chip-remove" (click)="removeExperience(i)">x</button>
-          </div>
-
-          <label>
-            Company
-            <input type="text" [name]="'experienceCompany' + i" [(ngModel)]="experience.companyName" />
-          </label>
-
-          <label>
-            Role
-            <input type="text" [name]="'experienceRole' + i" [(ngModel)]="experience.role" />
-          </label>
-
-          <div class="experience-dates">
-            <label>
-              Start Date
-              <input type="month" [name]="'experienceStart' + i" [(ngModel)]="experience.startDate" />
-            </label>
-
-            <label>
-              End Date
-              <input type="month" [name]="'experienceEnd' + i" [(ngModel)]="experience.endDate" />
-            </label>
-          </div>
-
-          <label>
-            Description
-            <textarea [name]="'experienceDescription' + i" rows="3" [(ngModel)]="experience.description"></textarea>
-          </label>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        class="primary"
-        data-testid="company-save-button"
-        (click)="saveCv()"
-        [disabled]="!currentCvId || isSaving">
-        {{ isSaving ? 'Saving...' : 'Save to Company Library' }}
-      </button>
-    </form>
-
-    <section *ngIf="activePage === 'library'" class="section">
-      <div class="library-header">
-        <h2>Company CV Library</h2>
-        <button type="button" class="mini" (click)="loadLibrary()" [disabled]="isLoadingLibrary">
-          {{ isLoadingLibrary ? 'Loading...' : 'Refresh' }}
-        </button>
-      </div>
-
-      <div class="search-grid">
-        <label>
-          Search
-          <input
-            type="text"
-            name="searchQuery"
-            placeholder="IWCF, Operator, HPHT..."
-            [(ngModel)]="searchQuery" />
-        </label>
-
-        <label>
-          Min Experience
-          <input type="number" min="0" name="minExp" [(ngModel)]="minExpFilter" />
-        </label>
-
-        <label>
-          Location Contains
-          <input type="text" name="locationFilter" [(ngModel)]="locationFilter" />
-        </label>
-
-        <label>
-          Certification Contains
-          <input type="text" name="certFilter" [(ngModel)]="certFilter" />
-        </label>
-
-        <div class="search-actions">
-          <button type="button" class="mini" (click)="searchLibrary()" [disabled]="isLoadingLibrary">Search</button>
-          <button type="button" class="mini secondary" (click)="clearLibraryFilters()" [disabled]="isLoadingLibrary">
-            Clear
-          </button>
-        </div>
-      </div>
-
-      <table class="library-table" *ngIf="cvLibrary.length > 0; else emptyState">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Latest Title</th>
-            <th>Location</th>
-            <th>Experience Years</th>
-            <th>Created</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of cvLibrary">
-            <td>{{ item.name }}</td>
-            <td>{{ item.latestTitle }}</td>
-            <td>{{ item.location || 'N/A' }}</td>
-            <td>{{ item.experienceYears ?? 'N/A' }}</td>
-            <td>{{ item.createdAtUtc | date:'mediumDate' }}</td>
-            <td>
-              <button type="button" class="mini" (click)="openCvDetail(item.id)" [disabled]="isLoadingDetail">
-                View
+            <mat-card-actions>
+              <button
+                mat-flat-button
+                color="primary"
+                data-testid="company-upload-button"
+                type="button"
+                [disabled]="!selectedFile || isUploading"
+                (click)="uploadCv()">
+                {{ isUploading ? 'Uploading...' : 'Upload & Parse' }}
               </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </mat-card-actions>
+          </mat-card>
+        </section>
 
-      <ng-template #emptyState>
-        <p class="hint">No CV records saved for this company yet.</p>
-      </ng-template>
-    </section>
+        <section *ngIf="activePage === 'library'" class="page-section">
+          <mat-card class="filters-card">
+            <mat-card-header>
+              <mat-card-title>CV Library Search</mat-card-title>
+              <mat-card-subtitle>Search and filter your company CV records.</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="filters-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Search (name, skills, certifications, role, company)</mat-label>
+                  <input matInput [(ngModel)]="searchQuery" />
+                </mat-form-field>
 
-    <section *ngIf="activePage === 'detail' && selectedCvDetail as detail" class="section">
-      <div class="library-header">
-        <h2>CV Record Details</h2>
-        <div class="detail-actions">
-          <button type="button" class="mini secondary" (click)="setPage('library')">Back to Library</button>
-          <button type="button" class="mini" (click)="editSelectedCv()">Edit</button>
-        </div>
+                <mat-form-field appearance="outline">
+                  <mat-label>Min experience years</mat-label>
+                  <input matInput type="number" min="0" [(ngModel)]="minExpFilter" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Education contains</mat-label>
+                  <input matInput [(ngModel)]="educationFilter" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Certification contains</mat-label>
+                  <input matInput [(ngModel)]="certFilter" />
+                </mat-form-field>
+              </div>
+              <mat-checkbox [(ngModel)]="needsReviewOnlyFilter">Needs review only</mat-checkbox>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-flat-button color="primary" type="button" (click)="loadLibrary()" [disabled]="isLoadingLibrary">
+                Search
+              </button>
+              <button mat-button type="button" (click)="clearFilters()" [disabled]="isLoadingLibrary">Clear</button>
+            </mat-card-actions>
+          </mat-card>
+
+          <mat-card class="table-card">
+            <mat-card-header>
+              <mat-card-title>Company CV Library</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="loading-wrap" *ngIf="isLoadingLibrary">
+                <mat-spinner diameter="36"></mat-spinner>
+              </div>
+
+              <table mat-table [dataSource]="dataSource" matSort class="cv-table">
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+                  <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="latestTitle">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Latest Role</th>
+                  <td mat-cell *matCellDef="let row">{{ row.latestTitle }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="highestEducation">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Highest Education</th>
+                  <td mat-cell *matCellDef="let row">{{ row.highestEducation || 'N/A' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="experienceYears">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Experience Years</th>
+                  <td mat-cell *matCellDef="let row">{{ row.experienceYears ?? 'N/A' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="createdAtUtc">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Created Date</th>
+                  <td mat-cell *matCellDef="let row">{{ row.createdAtUtc | date:'mediumDate' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let row" class="actions-cell">
+                    <button mat-button type="button" (click)="viewCv(row)" [disabled]="isBusyAction">View</button>
+                    <button mat-button color="primary" type="button" (click)="editCv(row)" [disabled]="isBusyAction">
+                      Edit
+                    </button>
+                    <button mat-button color="warn" type="button" (click)="deleteCv(row)" [disabled]="isBusyAction">
+                      Delete
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+              </table>
+
+              <p class="empty-table" *ngIf="!isLoadingLibrary && dataSource.data.length === 0">
+                No CV records found for these filters.
+              </p>
+            </mat-card-content>
+            <mat-card-actions>
+              <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 50]" showFirstLastButtons></mat-paginator>
+            </mat-card-actions>
+          </mat-card>
+
+        </section>
+
+        <section *ngIf="activePage === 'candidateDetail' && selectedCvDetail as detail" class="page-section">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Candidate Profile</mat-card-title>
+              <mat-card-subtitle>{{ detail.structuredProfile.name || 'Unknown candidate' }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-actions>
+              <button mat-flat-button color="primary" type="button" (click)="backToLibrary()">Back to Library</button>
+              <a mat-button [href]="apiBaseUrl + detail.downloadUrl" target="_blank" rel="noopener">Download PDF</a>
+            </mat-card-actions>
+          </mat-card>
+
+          <mat-card class="detail-card">
+            <mat-card-header>
+              <mat-card-title>Personal Information</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="detail-grid">
+                <p><strong>Name:</strong> {{ detail.structuredProfile.name || 'N/A' }}</p>
+                <p><strong>Email:</strong> {{ detail.structuredProfile.email || 'N/A' }}</p>
+                <p><strong>Phone:</strong> {{ detail.structuredProfile.phoneNumber || 'N/A' }}</p>
+                <p><strong>Location:</strong> {{ detail.structuredProfile.location || 'N/A' }}</p>
+                <p><strong>Total Experience:</strong> {{ detail.structuredProfile.experienceYears ?? 'N/A' }}</p>
+                <p><strong>Created:</strong> {{ detail.createdAtUtc | date:'medium' }}</p>
+                <p><strong>Updated:</strong> {{ detail.updatedAtUtc ? (detail.updatedAtUtc | date:'medium') : 'N/A' }}</p>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="detail-card" *ngIf="(detail.structuredProfile.roleExperience?.length ?? 0) > 0">
+            <mat-card-header>
+              <mat-card-title>Role Experience</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="role-exp-list">
+                <div class="role-exp-row" *ngFor="let item of detail.structuredProfile.roleExperience">
+                  <div class="role-exp-info-row">
+                    <span class="role-title">{{ item.jobTitle }}</span>
+                    <span class="role-company">{{ getCompaniesForRole(item.jobTitle, detail.structuredProfile.experiences) }}</span>
+                  </div>
+                  <strong>{{ item.years | number:'1.0-1' }} years</strong>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="detail-card">
+            <mat-card-header>
+              <mat-card-title>Core Profile</mat-card-title>
+            </mat-card-header>
+            <mat-card-content class="list-grid">
+              <div>
+                <h4>Highest Education</h4>
+                <p>{{ detail.structuredProfile.highestEducation || 'N/A' }}</p>
+              </div>
+              <div>
+                <h4>Skills</h4>
+                <ul>
+                  <li *ngFor="let skill of detail.structuredProfile.skills">{{ skill }}</li>
+                  <li *ngIf="(detail.structuredProfile.skills?.length ?? 0) === 0">N/A</li>
+                </ul>
+              </div>
+              <div>
+                <h4>Certifications</h4>
+                <ul>
+                  <li *ngFor="let cert of detail.structuredProfile.certifications">{{ cert }}</li>
+                  <li *ngIf="(detail.structuredProfile.certifications?.length ?? 0) === 0">N/A</li>
+                </ul>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="detail-card">
+            <mat-card-header>
+              <mat-card-title>Experience Entries</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="experience-list" *ngIf="(detail.structuredProfile.experiences?.length ?? 0) > 0; else noExperience">
+                <div class="experience-item" *ngFor="let exp of detail.structuredProfile.experiences">
+                  <p><strong>Standard Role:</strong> {{ exp.standardRoleName || exp.role || 'N/A' }}</p>
+                  <p><strong>Original CV Role:</strong> {{ exp.rawRoleTitle || 'N/A' }}</p>
+                  <p><strong>Match Confidence:</strong> {{ exp.matchConfidence !== null && exp.matchConfidence !== undefined ? (exp.matchConfidence | number:'1.2-2') : 'N/A' }}</p>
+                  <p><strong>Needs Review:</strong> {{ exp.needsReview ? 'Yes' : 'No' }}</p>
+                  <p><strong>Company:</strong> {{ exp.companyName || 'N/A' }}</p>
+                  <p><strong>Start:</strong> {{ exp.startDate || 'N/A' }}</p>
+                  <p><strong>End:</strong> {{ exp.endDate || 'N/A' }}</p>
+                  <p><strong>Description:</strong> {{ exp.description || 'N/A' }}</p>
+                </div>
+              </div>
+              <ng-template #noExperience>
+                <p>No experience entries available.</p>
+              </ng-template>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button type="button" (click)="closeDetail()">Close Profile</button>
+            </mat-card-actions>
+          </mat-card>
+        </section>
+
+        <section *ngIf="activePage === 'settings'" class="page-section">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Settings</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>This section is reserved for company preferences in the next iteration.</p>
+            </mat-card-content>
+          </mat-card>
+        </section>
       </div>
-
-      <div class="detail-meta">
-        <p><strong>ID:</strong> {{ detail.id }}</p>
-        <p><strong>Status:</strong> {{ detail.isFinalized ? 'Finalized' : 'Draft' }}</p>
-        <p><strong>Created:</strong> {{ detail.createdAtUtc | date:'medium' }}</p>
-        <p *ngIf="detail.updatedAtUtc"><strong>Updated:</strong> {{ detail.updatedAtUtc | date:'medium' }}</p>
-      </div>
-
-      <a class="download-link" [href]="apiBaseUrl + detail.downloadUrl" target="_blank" rel="noopener">
-        Download PDF
-      </a>
-
-      <div class="detail-grid">
-        <div><strong>Name:</strong> {{ detail.structuredProfile.name || 'N/A' }}</div>
-        <div><strong>Email:</strong> {{ detail.structuredProfile.email || 'N/A' }}</div>
-        <div><strong>Location:</strong> {{ detail.structuredProfile.location || 'N/A' }}</div>
-        <div><strong>Experience Years:</strong> {{ detail.structuredProfile.experienceYears ?? 'N/A' }}</div>
-      </div>
-
-      <div class="detail-block">
-        <h3>Job Titles</h3>
-        <div class="chip-list" *ngIf="(detail.structuredProfile.jobTitles?.length ?? 0) > 0; else noTitles">
-          <div class="chip" *ngFor="let title of detail.structuredProfile.jobTitles">{{ title }}</div>
-        </div>
-        <ng-template #noTitles><p class="hint">No job titles recorded.</p></ng-template>
-      </div>
-
-      <div class="detail-block">
-        <h3>Companies</h3>
-        <div class="chip-list" *ngIf="(detail.structuredProfile.companies?.length ?? 0) > 0; else noCompanies">
-          <div class="chip" *ngFor="let company of detail.structuredProfile.companies">{{ company }}</div>
-        </div>
-        <ng-template #noCompanies><p class="hint">No companies recorded.</p></ng-template>
-      </div>
-
-      <div class="detail-block">
-        <h3>Skills</h3>
-        <div class="chip-list" *ngIf="(detail.structuredProfile.skills?.length ?? 0) > 0; else noSkills">
-          <div class="chip" *ngFor="let skill of detail.structuredProfile.skills">{{ skill }}</div>
-        </div>
-        <ng-template #noSkills><p class="hint">No skills recorded.</p></ng-template>
-      </div>
-
-      <div class="detail-block">
-        <h3>Certifications</h3>
-        <div class="chip-list" *ngIf="(detail.structuredProfile.certifications?.length ?? 0) > 0; else noCerts">
-          <div class="chip" *ngFor="let cert of detail.structuredProfile.certifications">{{ cert }}</div>
-        </div>
-        <ng-template #noCerts><p class="hint">No certifications recorded.</p></ng-template>
-      </div>
-
-      <div class="detail-block">
-        <h3>Experience Entries</h3>
-        <div class="experience-card" *ngFor="let experience of detail.structuredProfile.experiences; index as i">
-          <div class="experience-card-header">
-            <strong>Experience {{ i + 1 }}</strong>
-          </div>
-          <p><strong>Company:</strong> {{ experience.companyName || 'N/A' }}</p>
-          <p><strong>Role:</strong> {{ experience.role || 'N/A' }}</p>
-          <p><strong>Period:</strong> {{ experience.startDate || 'N/A' }} - {{ experience.endDate || 'N/A' }}</p>
-          <p><strong>Description:</strong> {{ experience.description || 'N/A' }}</p>
-        </div>
-        <p class="hint" *ngIf="(detail.structuredProfile.experiences?.length ?? 0) === 0">
-          No experience entries recorded.
-        </p>
-      </div>
-    </section>
-  </section>
-</main>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

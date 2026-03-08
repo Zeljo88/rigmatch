@@ -21,15 +21,35 @@ Content-Type: application/json
   "finalProfile": {
     "name": "John Doe",
     "email": "john.doe@example.com",
+    "location": "Abu Dhabi",
     "jobTitles": ["Senior Software Engineer"],
     "companies": ["Contoso"],
     "skills": [".NET", "Azure"],
     "certifications": ["AZ-204"],
     "experienceYears": 8,
-    "experiences": []
+    "experiences": [
+      {
+        "companyName": "Contoso",
+        "role": "Junior Petroleum Operator",
+        "startDate": "2020-01",
+        "endDate": "2023-01",
+        "description": "Field operations"
+      },
+      {
+        "companyName": "Contoso",
+        "role": "Petroleum Operator",
+        "startDate": "2023-02",
+        "endDate": "Present",
+        "description": "Lead operations"
+      }
+    ]
   }
 }
 
 ### Company: List saved CVs
 GET {{RigMatch.Api_HostAddress}}/company/cvs
+X-Company-Id: rigmatch-demo-company
+
+### Company: Delete CV record
+DELETE {{RigMatch.Api_HostAddress}}/company/cv/{{cvId}}
 X-Company-Id: rigmatch-demo-company

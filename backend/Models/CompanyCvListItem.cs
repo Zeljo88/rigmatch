@@ -4,7 +4,7 @@ public sealed record CompanyCvListItem(
     Guid Id,
     string Name,
     string LatestTitle,
-    string? Location,
+    string? HighestEducation,
     int? ExperienceYears,
     DateTimeOffset CreatedAtUtc,
     bool IsFinalized);

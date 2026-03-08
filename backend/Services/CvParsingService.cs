@@ -36,6 +36,7 @@ public sealed class CvParsingService : ICvParsingService
 
     private readonly HttpClient _httpClient;
     private readonly IWebHostEnvironment _environment;
+    private readonly IRoleStandardizationService _roleStandardizationService;
     private readonly IOptions<CvParsingOptions> _options;
     private readonly ILogger<CvParsingService> _logger;
     private const int MaxAttempts = 3;
@@ -60,11 +61,13 @@ public sealed class CvParsingService : ICvParsingService
     public CvParsingService(
         HttpClient httpClient,
         IWebHostEnvironment environment,
+        IRoleStandardizationService roleStandardizationService,
         IOptions<CvParsingOptions> options,
         ILogger<CvParsingService> logger)
     {
         _httpClient = httpClient;
         _environment = environment;
+        _roleStandardizationService = roleStandardizationService;
         _options = options;
         _logger = logger;
     }
@@ -103,8 +106,11 @@ public sealed class CvParsingService : ICvParsingService
                               - Output MUST be valid JSON only. No markdown. No explanations.
                               - Do NOT guess or invent. If a field is not explicit, return null or [].
                               - Prefer factual extraction over summarization.
+                              - Normalize dates: "YYYY-MM" if month is known, "YYYY" if only year is known, null if unknown.
                               - Remove duplicates in arrays (case-insensitive).
-                              - Keep lists concise: max 30 skills, max 20 certifications.
+                              - Keep lists concise: max 30 skills, max 20 certifications, max 10 experiences.
+                              - Keep each experience description very short (max 140 chars, plain text).
+                              - Keep endDate as a single value only ("YYYY-MM", "YYYY", or "Present"), never ranges.
                               """
                 },
                 new
@@ -115,11 +121,22 @@ public sealed class CvParsingService : ICvParsingService
                                 {
                                   "name": "string|null",
                                   "email": "string|null",
+                                  "phoneNumber": "string|null",
+                                  "highestEducation": "string|null",
                                   "jobTitles": ["string"],
                                   "companies": ["string"],
                                   "skills": ["string"],
                                   "certifications": ["string"],
                                   "experienceYears": "number|null",
+                                  "experiences": [
+                                    {
+                                      "companyName": "string|null",
+                                      "role": "string|null",
+                                      "startDate": "YYYY-MM|YYYY|null",
+                                      "endDate": "YYYY-MM|YYYY|Present|null",
+                                      "description": "string|null"
+                                    }
+                                  ],
                                   "extractionNotes": {
                                     "missingCriticalFields": ["string"],
                                     "lowConfidenceFields": ["string"]
@@ -156,7 +173,48 @@ public sealed class CvParsingService : ICvParsingService
 
             if (response.IsSuccessStatusCode)
             {
-                return ParseModelResponse(responseContent);
+                try
+                {
+                    return await ParseModelResponseAsync(responseContent, cancellationToken);
+                }
+                catch (JsonException ex)
+                {
+                    var finishReason = TryExtractFinishReason(responseContent);
+                    _logger.LogWarning(
+                        ex,
+                        "CV parsing returned malformed JSON (attempt {Attempt}/{MaxAttempts}). FinishReason={FinishReason}.",
+                        attempt,
+                        MaxAttempts,
+                        finishReason ?? "unknown");
+
+                    if (attempt < MaxAttempts)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(attempt), cancellationToken);
+                        continue;
+                    }
+
+                    throw new AiServiceException(
+                        "AI parser returned incomplete JSON for this CV. Please retry or reduce input size.",
+                        502);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "CV parsing returned an unusable response (attempt {Attempt}/{MaxAttempts}).",
+                        attempt,
+                        MaxAttempts);
+
+                    if (attempt < MaxAttempts)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(attempt), cancellationToken);
+                        continue;
+                    }
+
+                    throw new AiServiceException(
+                        "AI parser returned an invalid response format. Please retry.",
+                        502);
+                }
             }
 
             var statusCode = (int)response.StatusCode;
@@ -248,7 +306,7 @@ public sealed class CvParsingService : ICvParsingService
         return TrimToMax(merged, maxTextChars);
     }
 
-    private static ParsedCandidateProfile ParseModelResponse(string responseContent)
+    private async Task<ParsedCandidateProfile> ParseModelResponseAsync(string responseContent, CancellationToken cancellationToken)
     {
         using var completion = JsonDocument.Parse(responseContent);
         var choices = completion.RootElement.GetProperty("choices");
@@ -268,14 +326,21 @@ public sealed class CvParsingService : ICvParsingService
             throw new InvalidOperationException("Model output was empty.");
         }
 
+        var experiences = await NormalizeExperiencesAsync(payload.Experiences, cancellationToken);
+        var roleExperience = RoleExperienceCalculator.Calculate(experiences);
+
         return new ParsedCandidateProfile(
             payload.Name?.Trim() ?? string.Empty,
             payload.Email?.Trim() ?? string.Empty,
-            NormalizeList(payload.JobTitles),
+            payload.PhoneNumber?.Trim() ?? string.Empty,
+            payload.HighestEducation?.Trim() ?? string.Empty,
+            await NormalizeRoleListAsync(payload.JobTitles, experiences, cancellationToken),
             NormalizeList(payload.Companies),
             NormalizeList(payload.Skills),
             NormalizeList(payload.Certifications),
-            Math.Max(payload.ExperienceYears, 0));
+            (int)Math.Round(Math.Max(payload.ExperienceYears ?? 0d, 0d), MidpointRounding.AwayFromZero),
+            experiences,
+            roleExperience);
     }
 
     private static IReadOnlyList<string> NormalizeList(IEnumerable<string>? items)
@@ -286,6 +351,67 @@ public sealed class CvParsingService : ICvParsingService
                    .Distinct(StringComparer.OrdinalIgnoreCase)
                    .ToArray()
                ?? [];
+    }
+
+    private async Task<IReadOnlyList<ParsedExperienceEntry>> NormalizeExperiencesAsync(
+        IEnumerable<ModelExperienceEntry>? items,
+        CancellationToken cancellationToken)
+    {
+        if (items is null)
+        {
+            return [];
+        }
+
+        var result = new List<ParsedExperienceEntry>();
+        foreach (var item in items)
+        {
+            var match = await _roleStandardizationService.MatchRoleAsync(
+                (item.Role ?? string.Empty).Trim(),
+                cancellationToken);
+
+            var normalizedItem = new ParsedExperienceEntry(
+                (item.CompanyName ?? string.Empty).Trim(),
+                match.RawRoleTitle,
+                match.StandardRoleId,
+                match.StandardRoleName,
+                match.MatchConfidence,
+                match.NeedsReview,
+                false,
+                (item.StartDate ?? string.Empty).Trim(),
+                (item.EndDate ?? string.Empty).Trim(),
+                (item.Description ?? string.Empty).Trim());
+
+            if (string.IsNullOrWhiteSpace(normalizedItem.CompanyName) &&
+                string.IsNullOrWhiteSpace(normalizedItem.StandardRoleName) &&
+                string.IsNullOrWhiteSpace(normalizedItem.Description))
+            {
+                continue;
+            }
+
+            result.Add(normalizedItem);
+            if (result.Count == 15)
+            {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<IReadOnlyList<string>> NormalizeRoleListAsync(
+        IEnumerable<string>? rolesFromModel,
+        IReadOnlyList<ParsedExperienceEntry> normalizedExperiences,
+        CancellationToken cancellationToken)
+    {
+        var direct = await _roleStandardizationService.StandardizeRoleListAsync(rolesFromModel, cancellationToken);
+        if (direct.Count > 0)
+        {
+            return direct;
+        }
+
+        return await _roleStandardizationService.StandardizeRoleListAsync(
+            normalizedExperiences.Select(exp => exp.StandardRoleName),
+            cancellationToken);
     }
 
     private static string ExtractMessageContent(JsonElement contentElement)
@@ -406,6 +532,30 @@ public sealed class CvParsingService : ICvParsingService
         return $"Azure OpenAI request failed ({statusCode}).";
     }
 
+    private static string? TryExtractFinishReason(string responseContent)
+    {
+        try
+        {
+            using var json = JsonDocument.Parse(responseContent);
+            if (!json.RootElement.TryGetProperty("choices", out var choices) || choices.GetArrayLength() == 0)
+            {
+                return null;
+            }
+
+            var firstChoice = choices[0];
+            if (!firstChoice.TryGetProperty("finish_reason", out var finishReasonElement))
+            {
+                return null;
+            }
+
+            return finishReasonElement.GetString();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static bool ShouldKeepParagraph(string paragraph)
     {
         var lower = paragraph.ToLowerInvariant();
@@ -468,6 +618,7 @@ public sealed class CvParsingService : ICvParsingService
 
         var email = Regex.Match(cvText, @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", RegexOptions.IgnoreCase)
             .Value;
+        var phone = Regex.Match(cvText, @"\+?\d[\d\s().-]{6,}").Value;
 
         var experienceYears = 0;
         var yearsMatch = Regex.Match(cvText, @"(\d{1,2})\+?\s+years?", RegexOptions.IgnoreCase);
@@ -483,19 +634,33 @@ public sealed class CvParsingService : ICvParsingService
         return new ParsedCandidateProfile(
             candidateName,
             email,
+            phone,
+            string.Empty,
             [],
             [],
             skills,
             [],
-            experienceYears);
+            experienceYears,
+            [],
+            []);
     }
 
     private sealed record ModelOutput(
         string? Name,
         string? Email,
+        string? PhoneNumber,
+        string? HighestEducation,
         IReadOnlyList<string>? JobTitles,
         IReadOnlyList<string>? Companies,
         IReadOnlyList<string>? Skills,
         IReadOnlyList<string>? Certifications,
-        int ExperienceYears);
+        double? ExperienceYears,
+        IReadOnlyList<ModelExperienceEntry>? Experiences);
+
+    private sealed record ModelExperienceEntry(
+        string? CompanyName,
+        string? Role,
+        string? StartDate,
+        string? EndDate,
+        string? Description);
 }
