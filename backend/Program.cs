@@ -13,6 +13,7 @@ builder.Services.AddDbContext<RigMatchDbContext>(options =>
     options.UseSqlite(connectionString);
 });
 builder.Services.AddScoped<ICvTextExtractionService, CvTextExtractionService>();
+builder.Services.AddScoped<IRoleStandardizationService, RoleStandardizationService>();
 builder.Services.AddHttpClient<ICvParsingService, CvParsingService>();
 builder.Services.Configure<CvParsingOptions>(builder.Configuration.GetSection("CvParsing"));
 const string FrontendCorsPolicy = "FrontendDevPolicy";
@@ -33,6 +34,7 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RigMatchDbContext>();
     dbContext.Database.EnsureCreated();
+    await RoleCatalogSeeder.SeedAsync(dbContext);
 }
 
 // Configure the HTTP request pipeline.
