@@ -29,6 +29,9 @@
                 <p class="file-name" *ngIf="selectedFile">
                   Selected: <strong>{{ selectedFile.name }}</strong> ({{ selectedFile.size | number }} bytes)
                 </p>
+                <p class="file-name" *ngIf="uploadCooldownRemainingSeconds > 0">
+                  Azure cooldown active. Retry in <strong>{{ uploadCooldownRemainingSeconds }}</strong>s.
+                </p>
               </div>
             </mat-card-content>
 
@@ -38,9 +41,9 @@
                 color="primary"
                 data-testid="company-upload-button"
                 type="button"
-                [disabled]="!selectedFile || isUploading"
+                [disabled]="!selectedFile || isUploading || uploadCooldownRemainingSeconds > 0"
                 (click)="uploadCv()">
-                {{ isUploading ? 'Uploading...' : 'Upload & Parse' }}
+                {{ isUploading ? 'Uploading...' : (uploadCooldownRemainingSeconds > 0 ? ('Retry in ' + uploadCooldownRemainingSeconds + 's') : 'Upload & Parse') }}
               </button>
             </mat-card-actions>
           </mat-card>

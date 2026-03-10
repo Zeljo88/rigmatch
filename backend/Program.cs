@@ -12,6 +12,8 @@ builder.Services.AddDbContext<RigMatchDbContext>(options =>
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=rigmatch.db";
     options.UseSqlite(connectionString);
 });
+builder.Services.AddSingleton<ICvDiagnosticsLogger, FileCvDiagnosticsLogger>();
+builder.Services.AddSingleton<ICvParsingGate, CvParsingGate>();
 builder.Services.AddScoped<ICvTextExtractionService, CvTextExtractionService>();
 builder.Services.AddScoped<IRoleStandardizationService, RoleStandardizationService>();
 builder.Services.AddHttpClient<ICvParsingService, CvParsingService>();
@@ -33,8 +35,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RigMatchDbContext>();
-    dbContext.Database.EnsureCreated();
-    await RoleCatalogSeeder.SeedAsync(dbContext);
+    await RigMatchDbBootstrapper.InitializeAsync(dbContext);
 }
 
 // Configure the HTTP request pipeline.

@@ -36,6 +36,13 @@ public class RigMatchDbContext : DbContext
             .HasMaxLength(500);
 
         modelBuilder.Entity<CvRecord>()
+            .Property(c => c.FileHash)
+            .HasMaxLength(128);
+
+        modelBuilder.Entity<CvRecord>()
+            .HasIndex(c => c.FileHash);
+
+        modelBuilder.Entity<CvRecord>()
             .HasOne(c => c.Company)
             .WithMany(c => c.CvRecords)
             .HasForeignKey(c => c.CompanyId)

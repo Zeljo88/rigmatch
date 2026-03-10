@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { AfterViewInit, Component, ViewChild, inject } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -18,6 +18,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ConfirmDialogComponent } from './confirm-dialog.component';
 import { CvEditDialogComponent } from './cv-edit-dialog.component';
 import {
+  CompanyCvDuplicateWarning,
   CompanyCvDetailResponse,
   CompanyCvDetailView,
   CompanyCvListItem,
@@ -53,7 +54,7 @@ type Page = 'upload' | 'library' | 'settings' | 'candidateDetail';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements AfterViewInit {
+export class AppComponent implements AfterViewInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
@@ -71,6 +72,7 @@ export class AppComponent implements AfterViewInit {
   isUploading = false;
   isLoadingLibrary = false;
   isBusyAction = false;
+  uploadCooldownRemainingSeconds = 0;
 
   searchQuery = '';
   minExpFilter: number | null = null;
@@ -81,6 +83,7 @@ export class AppComponent implements AfterViewInit {
   selectedCvDetail: CompanyCvDetailView | null = null;
   dataSource = new MatTableDataSource<CompanyCvListItem>([]);
   private standardRolesCache: string[] = [];
+  private uploadCooldownTimer: ReturnType<typeof setInterval> | null = null;
 
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator ?? null;
@@ -96,6 +99,10 @@ export class AppComponent implements AfterViewInit {
 
       return (item as Record<string, unknown>)[property] as string | number;
     };
+  }
+
+  ngOnDestroy(): void {
+    this.clearUploadCooldownTimer();
   }
 
   setPage(page: Page): void {
@@ -116,7 +123,7 @@ export class AppComponent implements AfterViewInit {
   }
 
   uploadCv(): void {
-    if (!this.selectedFile || this.isUploading) {
+    if (!this.selectedFile || this.isUploading || this.uploadCooldownRemainingSeconds > 0) {
       return;
     }
 
@@ -133,6 +140,7 @@ export class AppComponent implements AfterViewInit {
         next: (response) => {
           this.isUploading = false;
           this.selectedFile = null;
+          this.showDuplicateWarnings(response.duplicateWarnings);
           this.loadStandardRoles(standardRoles => {
             this.openEditDialog(
               response.id,
@@ -144,6 +152,10 @@ export class AppComponent implements AfterViewInit {
         },
         error: (error) => {
           this.isUploading = false;
+          const retryAfterSeconds = Number(error?.error?.retryAfterSeconds ?? 0);
+          if (error?.status === 429 && retryAfterSeconds > 0) {
+            this.startUploadCooldown(retryAfterSeconds);
+          }
           this.showError((error?.error?.message as string) ?? 'CV upload failed.');
         }
       });
@@ -363,6 +375,7 @@ export class AppComponent implements AfterViewInit {
               ...this.selectedCvDetail,
               structuredProfile: {
                 ...profile,
+                experienceYears: this.calculateTotalExperienceYears(profile.experiences),
                 roleExperience: this.buildRoleExperience(profile.experiences)
               },
               isFinalized: true,
@@ -379,6 +392,51 @@ export class AppComponent implements AfterViewInit {
 
   private showError(message: string): void {
     this.snackBar.open(message, 'Close', { duration: 4500 });
+  }
+
+  private showDuplicateWarnings(warnings: CompanyCvDuplicateWarning[] | undefined): void {
+    if (!warnings || warnings.length === 0) {
+      return;
+    }
+
+    const exactWarnings = warnings.filter(warning => warning.type === 'exact');
+    const probableWarnings = warnings.filter(warning => warning.type !== 'exact');
+
+    if (exactWarnings.length > 0) {
+      this.snackBar.open(
+        `${exactWarnings[0].message} Open existing record in CV Library if needed.`,
+        'Close',
+        { duration: 7000 });
+    }
+
+    if (probableWarnings.length > 0) {
+      this.snackBar.open(
+        probableWarnings[0].message,
+        'Close',
+        { duration: 7000 });
+    }
+  }
+
+  private startUploadCooldown(retryAfterSeconds: number): void {
+    this.uploadCooldownRemainingSeconds = Math.max(1, Math.ceil(retryAfterSeconds));
+    this.clearUploadCooldownTimer();
+
+    this.uploadCooldownTimer = setInterval(() => {
+      if (this.uploadCooldownRemainingSeconds <= 1) {
+        this.uploadCooldownRemainingSeconds = 0;
+        this.clearUploadCooldownTimer();
+        return;
+      }
+
+      this.uploadCooldownRemainingSeconds--;
+    }, 1000);
+  }
+
+  private clearUploadCooldownTimer(): void {
+    if (this.uploadCooldownTimer !== null) {
+      clearInterval(this.uploadCooldownTimer);
+      this.uploadCooldownTimer = null;
+    }
   }
 
   private loadStandardRoles(onSuccess: (roles: string[]) => void): void {
@@ -500,43 +558,31 @@ export class AppComponent implements AfterViewInit {
       companies: [...(profile.companies ?? [])],
       skills: [...(profile.skills ?? [])],
       certifications: [...(profile.certifications ?? [])],
-      experienceYears: profile.experienceYears ?? 0,
+      experienceYears: experiences.length > 0
+        ? this.calculateTotalExperienceYears(experiences)
+        : (profile.experienceYears ?? 0),
       experiences,
       roleExperience
     };
   }
 
   private buildRoleExperience(experiences: ExperienceEntry[]): RoleExperienceEntry[] {
+    const resolvedExperiences = this.resolveExperienceRanges(experiences);
     const buckets = new Map<string, RoleExperienceEntry>();
 
-    for (const experience of experiences) {
-      const role = experience.standardRoleName?.trim() || experience.role?.trim() || experience.rawRoleTitle?.trim();
-      if (!role) {
-        continue;
-      }
-
-      const start = this.tryParseDate(experience.startDate);
-      if (!start) {
-        continue;
-      }
-
-      const end = this.tryParseDate(experience.endDate) ?? new Date();
-      if (end.getTime() < start.getTime()) {
-        continue;
-      }
-
-      const years = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+    for (const experience of resolvedExperiences) {
+      const years = (experience.end.getTime() - experience.start.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
       if (years <= 0.01) {
         continue;
       }
 
-      const key = role.toLowerCase().replace(/\s+/g, ' ').trim();
+      const key = experience.role.toLowerCase().replace(/\s+/g, ' ').trim();
       const existing = buckets.get(key);
 
       if (existing) {
         existing.years += years;
       } else {
-        buckets.set(key, { jobTitle: role, years });
+        buckets.set(key, { jobTitle: experience.role, years });
       }
     }
 
@@ -546,6 +592,76 @@ export class AppComponent implements AfterViewInit {
         years: Math.round(item.years * 10) / 10
       }))
       .sort((a, b) => b.years - a.years || a.jobTitle.localeCompare(b.jobTitle));
+  }
+
+  private calculateTotalExperienceYears(experiences: ExperienceEntry[]): number {
+    const resolvedExperiences = this.resolveExperienceRanges(experiences)
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+
+    if (resolvedExperiences.length === 0) {
+      return 0;
+    }
+
+    let totalMs = 0;
+    let currentStart = resolvedExperiences[0].start;
+    let currentEnd = resolvedExperiences[0].end;
+
+    for (const experience of resolvedExperiences.slice(1)) {
+      if (experience.start.getTime() <= currentEnd.getTime()) {
+        if (experience.end.getTime() > currentEnd.getTime()) {
+          currentEnd = experience.end;
+        }
+
+        continue;
+      }
+
+      totalMs += currentEnd.getTime() - currentStart.getTime();
+      currentStart = experience.start;
+      currentEnd = experience.end;
+    }
+
+    totalMs += currentEnd.getTime() - currentStart.getTime();
+    return Math.round((totalMs / (1000 * 60 * 60 * 24 * 365.25)));
+  }
+
+  private resolveExperienceRanges(experiences: ExperienceEntry[]): { role: string; start: Date; end: Date }[] {
+    const drafts = experiences
+      .map(exp => {
+        const role = exp.standardRoleName?.trim() || exp.rawRoleTitle?.trim() || exp.role?.trim() || '';
+        const start = this.tryParseDate(exp.startDate);
+        const end = this.tryParseDate(exp.endDate);
+        const isCurrent = /^(present|current|now)$/i.test((exp.endDate ?? '').trim());
+
+        return { role, start, end, isCurrent };
+      })
+      .filter(item => item.role.length > 0 && !!item.start)
+      .sort((a, b) => a.start!.getTime() - b.start!.getTime());
+
+    const now = new Date();
+    const resolved: { role: string; start: Date; end: Date }[] = [];
+
+    for (let i = 0; i < drafts.length; i++) {
+      const current = drafts[i];
+      const start = current.start!;
+      let end = current.end;
+
+      if (!end) {
+        if (current.isCurrent || i === drafts.length - 1) {
+          end = now;
+        } else {
+          const nextStart = drafts[i + 1].start!;
+          end = nextStart.getTime() > start.getTime() ? nextStart : start;
+        }
+      }
+
+      if (end.getTime() < start.getTime()) {
+        continue;
+      }
+
+      resolved.push({ role: current.role, start, end });
+    }
+
+    return resolved;
   }
 
   private tryParseDate(value?: string): Date | null {

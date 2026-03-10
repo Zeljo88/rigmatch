@@ -10,6 +10,8 @@ public class CvRecord
 
     public string FileUrl { get; set; } = string.Empty;
 
+    public string FileHash { get; set; } = string.Empty;
+
     public string ParsedDraftJson { get; set; } = string.Empty;
 
     public string? FinalJson { get; set; }

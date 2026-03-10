@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using RigMatch.Api.Data;
@@ -60,7 +59,7 @@ public sealed class RoleStandardizationService : IRoleStandardizationService
         }
 
         var fallbackConfidence = 0.45d;
-        return new RoleMatchResult(trimmedRaw, null, ToTitleCase(trimmedRaw), fallbackConfidence, fallbackConfidence < AutoAssignThreshold);
+        return new RoleMatchResult(trimmedRaw, null, string.Empty, fallbackConfidence, true);
     }
 
     public async Task<string> StandardizeRoleAsync(string? rawRole, CancellationToken cancellationToken = default)
@@ -169,13 +168,6 @@ public sealed class RoleStandardizationService : IRoleStandardizationService
     private static string Normalize(string value)
     {
         return RoleCatalogSeeder.Normalize(value);
-    }
-
-    private static string ToTitleCase(string value)
-    {
-        var normalized = Regex.Replace(value.Trim(), @"\s+", " ");
-        var lower = normalized.ToLowerInvariant();
-        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(lower);
     }
 
     private sealed record StandardRoleLookup(int Id, string Name);

@@ -1,0 +1,90 @@
+﻿2026-03-09T16:00:44.2519549+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-09T16:00:45.6501449+00:00 [upload.extracted] fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB extractedChars=8384
+2026-03-09T16:00:45.7117425+00:00 [parser.prepare] rawChars=8384 preparedChars=8300 maxTextChars=12000 maxCompletionTokens=700
+2026-03-09T16:00:45.7181555+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=700
+2026-03-09T16:00:52.9520642+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-09T16:00:54.0418703+00:00 [parser.request] attempt=2 preparedChars=8300 maxTokens=700
+2026-03-09T16:01:00.5554257+00:00 [parser.response] attempt=2 statusCode=200 success=true
+2026-03-09T16:01:02.5693137+00:00 [parser.request] attempt=3 preparedChars=8300 maxTokens=700
+2026-03-09T16:01:02.6833238+00:00 [parser.response] attempt=3 statusCode=429 retryAfterSeconds=44 message=Azure OpenAI rate limit reached. Please wait and retry. Details: Your requests to gpt-4o-mini-rigmatch-c5 for gpt-4o-mini in Sweden Central have exceeded the token rate limit for your current OpenAI S0 pricing tier. This request was for ChatCompletions_Create under Azure OpenAI API version 2024-10-21. Please retry after 44 seconds. To increase your default rate limit, visit: https://aka.ms/oai/quotaincrease.
+2026-03-09T16:01:02.6899843+00:00 [gate.cooldown-registered] retryAfterSeconds=44 cooldownUntilUtc=2026-03-09T16:01:46.6899156+00:00
+2026-03-09T16:15:19.6730951+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-09T16:15:21.5903578+00:00 [upload.extracted] fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB extractedChars=8384
+2026-03-09T16:15:21.6410600+00:00 [parser.prepare] rawChars=8384 preparedChars=8300 maxTextChars=12000 maxCompletionTokens=700
+2026-03-09T16:15:21.6469287+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=700
+2026-03-09T16:15:29.2905376+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-09T16:15:29.3425694+00:00 [parser.retry-json] attempt=1 finishReason=length preview={"choices":[{"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"protected_material_code":{"filtered":false,"detected":false},"protected_material_text":{"filtered":false,"detected":false},"self_harm":{"filtered":false,"se
+2026-03-09T16:15:30.4654504+00:00 [parser.request] attempt=2 preparedChars=8300 maxTokens=700
+2026-03-09T16:15:36.7517128+00:00 [parser.response] attempt=2 statusCode=200 success=true
+2026-03-09T16:15:36.7547247+00:00 [parser.retry-json] attempt=2 finishReason=length preview={"choices":[{"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"protected_material_code":{"filtered":false,"detected":false},"protected_material_text":{"filtered":false,"detected":false},"self_harm":{"filtered":false,"se
+2026-03-09T16:20:40.4651110+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=John Doe.pdf fileSize=44895 fileHash=FD1CA8127F384AE132DBD46E2C3BC7F6F7FBC8F07259C3246237482B382A0BC6
+2026-03-09T16:20:40.5229327+00:00 [upload.cache-hit] sourceRecordId=00b56171-3321-4682-88eb-7f354236dde1 fileHash=FD1CA8127F384AE132DBD46E2C3BC7F6F7FBC8F07259C3246237482B382A0BC6
+2026-03-09T16:20:40.8280598+00:00 [upload.duplicate-warnings] recordId=9c33eafc-8e26-4d51-97ab-828ff977847d warningCount=2
+2026-03-09T16:20:54.5226665+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-09T16:20:55.8696520+00:00 [upload.extracted] fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB extractedChars=8384
+2026-03-09T16:20:55.9232078+00:00 [parser.prepare] rawChars=8384 preparedChars=8300 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-09T16:20:55.9287694+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=1000
+2026-03-09T16:21:04.8737741+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-09T16:21:04.8973204+00:00 [parser.retry-json] attempt=1 finishReason=length preview={"choices":[{"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"protected_material_code":{"filtered":false,"detected":false},"protected_material_text":{"filtered":false,"detected":false},"self_harm":{"filtered":false,"se
+2026-03-09T16:21:05.9768524+00:00 [parser.request] attempt=2 preparedChars=8300 maxTokens=1000
+2026-03-09T16:21:13.8344142+00:00 [parser.response] attempt=2 statusCode=200 success=true
+2026-03-09T16:21:13.8417156+00:00 [parser.retry-json] attempt=2 finishReason=length preview={"choices":[{"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"protected_material_code":{"filtered":false,"detected":false},"protected_material_text":{"filtered":false,"detected":false},"self_harm":{"filtered":false,"se
+2026-03-09T16:32:35.5989022+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-09T16:32:36.4536869+00:00 [upload.extracted] fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB extractedChars=8384
+2026-03-09T16:32:36.4780649+00:00 [parser.prepare] rawChars=8384 preparedChars=8300 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-09T16:32:36.4959453+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=1000
+2026-03-09T16:32:45.7155053+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-09T16:32:45.7339978+00:00 [parser.retry-json] attempt=1 finishReason=length preview={"choices":[{"content_filter_result":{"error":{"code":"content_filter_error","message":"The contents are not filtered"}},"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"protected_material_code":{"filtered":false,"dete
+2026-03-09T16:32:46.7837271+00:00 [parser.request] attempt=2 preparedChars=8300 maxTokens=1000
+2026-03-09T16:32:55.0371087+00:00 [parser.response] attempt=2 statusCode=200 success=true
+2026-03-09T16:32:55.0399421+00:00 [parser.retry-json] attempt=2 finishReason=length preview={"choices":[{"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"protected_material_code":{"filtered":false,"detected":false},"protected_material_text":{"filtered":false,"detected":false},"self_harm":{"filtered":false,"se
+2026-03-09T16:32:55.0427213+00:00 [parser.fallback] reason=truncated-json
+2026-03-09T16:32:55.0966119+00:00 [upload.completed] recordId=97282a84-aac7-4970-9863-f30f74579302 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB warningCount=0
+2026-03-10T06:54:31.5474014+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-10T06:54:31.7317707+00:00 [upload.cache-hit] sourceRecordId=97282a84-aac7-4970-9863-f30f74579302 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-10T06:54:32.2215073+00:00 [upload.duplicate-warnings] recordId=31fcd518-8960-4971-a8b0-2a0502c9cda9 warningCount=2
+2026-03-10T06:55:19.4656520+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=Emma Thompson-resume.pdf fileSize=17237 fileHash=57F67A2C94CECD5DF9EB636B8A60C559D07B7139E0E3AC8EB1348F486DBC7DC6
+2026-03-10T06:55:20.4388534+00:00 [upload.extracted] fileHash=57F67A2C94CECD5DF9EB636B8A60C559D07B7139E0E3AC8EB1348F486DBC7DC6 extractedChars=1468
+2026-03-10T06:55:20.4898839+00:00 [parser.prepare] rawChars=1468 preparedChars=1468 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T06:55:20.4943055+00:00 [parser.request] attempt=1 preparedChars=1468 maxTokens=1000
+2026-03-10T06:55:24.9194438+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T06:55:25.0419299+00:00 [upload.completed] recordId=b756be7f-dbca-43be-8a3d-57d76dcebcd0 fileHash=57F67A2C94CECD5DF9EB636B8A60C559D07B7139E0E3AC8EB1348F486DBC7DC6 warningCount=0
+2026-03-10T07:11:56.7255440+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-10T07:11:57.4679153+00:00 [upload.extracted] fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB extractedChars=8384
+2026-03-10T07:11:57.4931872+00:00 [parser.prepare] rawChars=8384 preparedChars=8300 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T07:11:57.4963620+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=1000
+2026-03-10T07:12:08.7338278+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T07:12:08.8754981+00:00 [parser.retry-json] attempt=1 finishReason=length preview={"choices":[{"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"protected_material_code":{"filtered":false,"detected":false},"protected_material_text":{"filtered":false,"detected":false},"self_harm":{"filtered":false,"se
+2026-03-10T07:12:10.0272403+00:00 [parser.request] attempt=2 preparedChars=8300 maxTokens=1000
+2026-03-10T07:12:22.4415748+00:00 [parser.response] attempt=2 statusCode=200 success=true
+2026-03-10T07:12:22.4441358+00:00 [parser.retry-json] attempt=2 finishReason=length preview={"choices":[{"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"protected_material_code":{"filtered":false,"detected":false},"protected_material_text":{"filtered":false,"detected":false},"self_harm":{"filtered":false,"se
+2026-03-10T07:18:25.1703072+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-10T07:18:26.8159705+00:00 [upload.extracted] fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB extractedChars=8384
+2026-03-10T07:18:26.8580764+00:00 [parser.prepare] rawChars=8384 preparedChars=8300 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T07:18:26.8627775+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=1000
+2026-03-10T07:18:38.6614912+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T07:18:38.9415594+00:00 [upload.completed] recordId=1702195b-9a3f-4bad-af5d-ba61661de83f fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB warningCount=0
+2026-03-10T07:31:22.6105005+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-10T07:31:23.0314490+00:00 [upload.extracted] fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB extractedChars=8384
+2026-03-10T07:31:23.0472684+00:00 [parser.prepare] rawChars=8384 preparedChars=8300 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T07:31:23.0509158+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=1000
+2026-03-10T07:31:32.1587264+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T07:31:32.2106919+00:00 [upload.completed] recordId=895d819d-6b30-4325-9fe8-65d25d4f3691 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB warningCount=0
+2026-03-10T07:45:40.7361441+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=Emma Thompson-resume.pdf fileSize=17237 fileHash=57F67A2C94CECD5DF9EB636B8A60C559D07B7139E0E3AC8EB1348F486DBC7DC6
+2026-03-10T07:45:40.8711147+00:00 [upload.extracted] fileHash=57F67A2C94CECD5DF9EB636B8A60C559D07B7139E0E3AC8EB1348F486DBC7DC6 extractedChars=1468
+2026-03-10T07:45:40.8804952+00:00 [parser.prepare] rawChars=1468 preparedChars=1468 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T07:45:40.8831348+00:00 [parser.request] attempt=1 preparedChars=1468 maxTokens=1000
+2026-03-10T07:45:43.9004259+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T07:45:43.9261198+00:00 [upload.completed] recordId=4a814b55-2018-4288-86eb-a3866a785a2d fileHash=57F67A2C94CECD5DF9EB636B8A60C559D07B7139E0E3AC8EB1348F486DBC7DC6 warningCount=0
+2026-03-10T07:46:31.7530948+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=OIL&GAS-RESUME-7-(Project Manager & Interface Manager).pdf fileSize=737873 fileHash=05E66681DC963557C46E090C1C96989832509BF7347605C071B97779924E5459
+2026-03-10T07:46:32.1023812+00:00 [upload.extracted] fileHash=05E66681DC963557C46E090C1C96989832509BF7347605C071B97779924E5459 extractedChars=19998
+2026-03-10T07:46:32.1062426+00:00 [parser.prepare] rawChars=19998 preparedChars=12000 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T07:46:32.1086270+00:00 [parser.request] attempt=1 preparedChars=12000 maxTokens=1000
+2026-03-10T07:46:38.2106431+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T07:46:38.2383307+00:00 [upload.completed] recordId=69d0e285-aaf7-40f4-a709-af6569898aec fileHash=05E66681DC963557C46E090C1C96989832509BF7347605C071B97779924E5459 warningCount=0
+2026-03-10T07:48:23.8438034+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-10T07:48:25.9036222+00:00 [upload.extracted] fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB extractedChars=8384
+2026-03-10T07:48:25.9601372+00:00 [parser.prepare] rawChars=8384 preparedChars=8300 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T07:48:25.9664945+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=1000
+2026-03-10T07:48:35.6506637+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T07:48:35.8459474+00:00 [upload.completed] recordId=3b7ff53a-b1f7-4fa3-948e-c50ad278f34a fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB warningCount=0
