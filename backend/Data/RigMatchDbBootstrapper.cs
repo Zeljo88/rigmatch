@@ -9,6 +9,8 @@ public static class RigMatchDbBootstrapper
     {
         await dbContext.Database.EnsureCreatedAsync(cancellationToken);
         await EnsureCvRecordSchemaAsync(dbContext, cancellationToken);
+        await EnsureRoleAliasSchemaAsync(dbContext, cancellationToken);
+        await EnsureSuggestedRoleAliasSchemaAsync(dbContext, cancellationToken);
         await RoleCatalogSeeder.SeedAsync(dbContext, cancellationToken);
     }
 
@@ -65,5 +67,62 @@ public static class RigMatchDbBootstrapper
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    private static async Task EnsureRoleAliasSchemaAsync(RigMatchDbContext dbContext, CancellationToken cancellationToken)
+    {
+        var connection = dbContext.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA table_info('RoleAliases');";
+
+        var hasRequiresReview = false;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (string.Equals(reader["name"]?.ToString(), "RequiresReview", StringComparison.OrdinalIgnoreCase))
+            {
+                hasRequiresReview = true;
+                break;
+            }
+        }
+
+        await reader.CloseAsync();
+
+        if (!hasRequiresReview)
+        {
+            await dbContext.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE RoleAliases ADD COLUMN RequiresReview INTEGER NOT NULL DEFAULT 0;",
+                cancellationToken);
+        }
+    }
+
+    private static async Task EnsureSuggestedRoleAliasSchemaAsync(RigMatchDbContext dbContext, CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS SuggestedRoleAliases (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                CompanyId TEXT NOT NULL,
+                LastCvRecordId TEXT NULL,
+                StandardRoleId INTEGER NOT NULL,
+                RawAlias TEXT NOT NULL,
+                RawAliasNormalized TEXT NOT NULL,
+                ConfirmationCount INTEGER NOT NULL DEFAULT 1,
+                FirstSuggestedAtUtc TEXT NOT NULL,
+                LastSuggestedAtUtc TEXT NOT NULL,
+                FOREIGN KEY (CompanyId) REFERENCES Companies(Id) ON DELETE CASCADE,
+                FOREIGN KEY (LastCvRecordId) REFERENCES CvRecords(Id) ON DELETE SET NULL,
+                FOREIGN KEY (StandardRoleId) REFERENCES StandardRoles(Id) ON DELETE CASCADE
+            );
+            """, cancellationToken);
+
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_SuggestedRoleAliases_CompanyId_StandardRoleId_RawAliasNormalized
+            ON SuggestedRoleAliases(CompanyId, StandardRoleId, RawAliasNormalized);
+            """, cancellationToken);
     }
 }

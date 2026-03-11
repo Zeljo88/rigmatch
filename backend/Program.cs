@@ -16,6 +16,7 @@ builder.Services.AddSingleton<ICvDiagnosticsLogger, FileCvDiagnosticsLogger>();
 builder.Services.AddSingleton<ICvParsingGate, CvParsingGate>();
 builder.Services.AddScoped<ICvTextExtractionService, CvTextExtractionService>();
 builder.Services.AddScoped<IRoleStandardizationService, RoleStandardizationService>();
+builder.Services.AddScoped<IParsingReferenceService, ParsingReferenceService>();
 builder.Services.AddHttpClient<ICvParsingService, CvParsingService>();
 builder.Services.Configure<CvParsingOptions>(builder.Configuration.GetSection("CvParsing"));
 const string FrontendCorsPolicy = "FrontendDevPolicy";

@@ -11,4 +11,6 @@ public class Company
     public DateTimeOffset CreatedAtUtc { get; set; }
 
     public ICollection<CvRecord> CvRecords { get; set; } = new List<CvRecord>();
+
+    public ICollection<SuggestedRoleAlias> SuggestedRoleAliases { get; set; } = new List<SuggestedRoleAlias>();
 }

@@ -88,3 +88,230 @@
 2026-03-10T07:48:25.9664945+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=1000
 2026-03-10T07:48:35.6506637+00:00 [parser.response] attempt=1 statusCode=200 success=true
 2026-03-10T07:48:35.8459474+00:00 [upload.completed] recordId=3b7ff53a-b1f7-4fa3-948e-c50ad278f34a fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB warningCount=0
+2026-03-10T10:57:36.2888548+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV01_Martin_Reeve_Exact_Clean.pdf fileSize=3494 fileHash=3B6D33364443694E0D00500C912975767A3000BA331CD430493CB15941DE5AAA
+2026-03-10T10:57:38.6819355+00:00 [upload.extracted] fileHash=3B6D33364443694E0D00500C912975767A3000BA331CD430493CB15941DE5AAA extractedChars=2109
+2026-03-10T10:57:39.0969994+00:00 [parser.prepare] rawChars=2109 preparedChars=2109 referenceChars=344 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T10:57:39.1105764+00:00 [parser.request] attempt=1 preparedChars=2109 maxTokens=1000
+2026-03-10T10:57:44.6171946+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T10:57:44.9678889+00:00 [upload.completed] recordId=27e932f6-d071-4782-8b34-b562572d4e78 fileHash=3B6D33364443694E0D00500C912975767A3000BA331CD430493CB15941DE5AAA warningCount=0
+2026-03-10T10:58:16.1504130+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV04_Leila_Mercer_Alias_Clean.pdf fileSize=3020 fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7
+2026-03-10T10:58:16.2337675+00:00 [upload.extracted] fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7 extractedChars=1295
+2026-03-10T10:58:16.2556626+00:00 [parser.prepare] rawChars=1295 preparedChars=1295 referenceChars=348 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T10:58:16.2617618+00:00 [parser.request] attempt=1 preparedChars=1295 maxTokens=1000
+2026-03-10T10:58:20.5299038+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T10:58:20.5507655+00:00 [upload.completed] recordId=2a1290ca-dc1d-4123-827a-e32201c15089 fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7 warningCount=0
+2026-03-10T10:59:23.3416564+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV10_Bruno_Leist_Unmatched_Clean.pdf fileSize=2870 fileHash=755FBE0DB77D6C827CF71D79245B9212DDFBF639FEDBE414814F934F212A7795
+2026-03-10T10:59:23.3497618+00:00 [upload.extracted] fileHash=755FBE0DB77D6C827CF71D79245B9212DDFBF639FEDBE414814F934F212A7795 extractedChars=1122
+2026-03-10T10:59:23.3604658+00:00 [parser.prepare] rawChars=1122 preparedChars=1122 referenceChars=0 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T10:59:23.3626516+00:00 [parser.request] attempt=1 preparedChars=1122 maxTokens=1000
+2026-03-10T10:59:26.6378820+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T10:59:26.6488934+00:00 [upload.completed] recordId=cbf9278a-042e-4b32-b750-636a4a1390f5 fileHash=755FBE0DB77D6C827CF71D79245B9212DDFBF639FEDBE414814F934F212A7795 warningCount=0
+2026-03-10T12:07:45.1120652+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV09_Helen_Auto_Ambiguous_Clean.pdf fileSize=2940 fileHash=BE4EE53655F58AAF3E004ABA8A4E54C1D457EFA8AF361C59C52ADA4C59202E5C
+2026-03-10T12:07:45.2227201+00:00 [upload.extracted] fileHash=BE4EE53655F58AAF3E004ABA8A4E54C1D457EFA8AF361C59C52ADA4C59202E5C extractedChars=1149
+2026-03-10T12:07:45.2659922+00:00 [parser.prepare] rawChars=1149 preparedChars=1149 referenceChars=62 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T12:07:45.2713401+00:00 [parser.request] attempt=1 preparedChars=1149 maxTokens=1000
+2026-03-10T12:07:52.6924672+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T12:07:52.8099486+00:00 [upload.completed] recordId=d548b5f7-a6d6-40db-a25b-d26cc5993af3 fileHash=BE4EE53655F58AAF3E004ABA8A4E54C1D457EFA8AF361C59C52ADA4C59202E5C warningCount=0
+2026-03-10T12:20:00.2703046+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV08_Samir_Dole_Ambiguous_Clean.pdf fileSize=2909 fileHash=1DFDA2D6F0F3CB99ECE29A71760851EAE339BE9B42269DB35CF5767B3DC77120
+2026-03-10T12:20:00.3920093+00:00 [upload.extracted] fileHash=1DFDA2D6F0F3CB99ECE29A71760851EAE339BE9B42269DB35CF5767B3DC77120 extractedChars=1180
+2026-03-10T12:20:00.4466584+00:00 [parser.prepare] rawChars=1180 preparedChars=1180 referenceChars=225 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T12:20:00.4530524+00:00 [parser.request] attempt=1 preparedChars=1180 maxTokens=1000
+2026-03-10T12:20:05.5835831+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T12:20:05.7176781+00:00 [upload.completed] recordId=bbc4dddc-5efc-4f05-bf28-8f5621ff4bd9 fileHash=1DFDA2D6F0F3CB99ECE29A71760851EAE339BE9B42269DB35CF5767B3DC77120 warningCount=0
+2026-03-10T12:39:24.9199493+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV07_Nadia_Kerr_Ambiguous_Clean.pdf fileSize=2961 fileHash=00599594BC33AC760D92086E64200EF120F7CCA0E19D27D34407DF9F4AE4E871
+2026-03-10T12:39:26.4231452+00:00 [upload.extracted] fileHash=00599594BC33AC760D92086E64200EF120F7CCA0E19D27D34407DF9F4AE4E871 extractedChars=1229
+2026-03-10T12:39:26.6663326+00:00 [parser.prepare] rawChars=1229 preparedChars=1229 referenceChars=280 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T12:39:26.6714097+00:00 [parser.request] attempt=1 preparedChars=1229 maxTokens=1000
+2026-03-10T12:39:32.3573545+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T12:39:32.4834682+00:00 [upload.completed] recordId=86b4ae72-e01d-4920-8f31-db8dc70bdb13 fileHash=00599594BC33AC760D92086E64200EF120F7CCA0E19D27D34407DF9F4AE4E871 warningCount=0
+2026-03-10T14:45:01.7181098+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV04_Leila_Mercer_Alias_Clean.pdf fileSize=3020 fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7
+2026-03-10T14:45:01.8678584+00:00 [upload.cache-hit] sourceRecordId=2a1290ca-dc1d-4123-827a-e32201c15089 fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7
+2026-03-10T14:45:02.0210469+00:00 [upload.duplicate-warnings] recordId=b138dcc9-d182-428e-84a3-30fd744836d4 warningCount=2
+2026-03-10T15:14:49.9578710+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV01_Martin_Reeve_Exact_Clean.pdf fileSize=3494 fileHash=3B6D33364443694E0D00500C912975767A3000BA331CD430493CB15941DE5AAA
+2026-03-10T15:14:51.2013818+00:00 [upload.extracted] fileHash=3B6D33364443694E0D00500C912975767A3000BA331CD430493CB15941DE5AAA extractedChars=2109
+2026-03-10T15:14:51.4213304+00:00 [parser.prepare] rawChars=2109 preparedChars=2109 referenceChars=278 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T15:14:51.4296070+00:00 [parser.request] attempt=1 preparedChars=2109 maxTokens=1000
+2026-03-10T15:14:57.3966235+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T15:14:57.5468830+00:00 [upload.completed] recordId=2200e8bc-034e-40bf-a21e-833c53d22b1e fileHash=3B6D33364443694E0D00500C912975767A3000BA331CD430493CB15941DE5AAA warningCount=0
+2026-03-10T15:16:22.0763355+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV06_Rami_Solberg_Alias_Clean.pdf fileSize=3065 fileHash=6B99ED56EFF6382B8BBB049A10F5A0D6346401AC5E3F9D818A00E4E36C52B86A
+2026-03-10T15:16:22.1338426+00:00 [upload.extracted] fileHash=6B99ED56EFF6382B8BBB049A10F5A0D6346401AC5E3F9D818A00E4E36C52B86A extractedChars=1318
+2026-03-10T15:16:22.1681952+00:00 [parser.prepare] rawChars=1318 preparedChars=1318 referenceChars=70 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T15:16:22.1790421+00:00 [parser.request] attempt=1 preparedChars=1318 maxTokens=1000
+2026-03-10T15:16:27.5097189+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T15:16:27.5321524+00:00 [upload.completed] recordId=6158c4fb-f58e-44bf-a6d6-2890dce55510 fileHash=6B99ED56EFF6382B8BBB049A10F5A0D6346401AC5E3F9D818A00E4E36C52B86A warningCount=0
+2026-03-10T15:17:31.2182949+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV07_Nadia_Kerr_Ambiguous_Clean.pdf fileSize=2961 fileHash=00599594BC33AC760D92086E64200EF120F7CCA0E19D27D34407DF9F4AE4E871
+2026-03-10T15:17:31.2299373+00:00 [upload.extracted] fileHash=00599594BC33AC760D92086E64200EF120F7CCA0E19D27D34407DF9F4AE4E871 extractedChars=1229
+2026-03-10T15:17:31.2370659+00:00 [parser.prepare] rawChars=1229 preparedChars=1229 referenceChars=169 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T15:17:31.2412069+00:00 [parser.request] attempt=1 preparedChars=1229 maxTokens=1000
+2026-03-10T15:17:36.3884575+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T15:17:36.4011445+00:00 [upload.completed] recordId=7ee5b2a4-760b-489b-8597-b94db21a2f45 fileHash=00599594BC33AC760D92086E64200EF120F7CCA0E19D27D34407DF9F4AE4E871 warningCount=0
+2026-03-10T15:19:32.7126970+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV12_Gavin_Yule_Unmatched_Clean.pdf fileSize=2915 fileHash=3F45A9738A5D828C026C6927F840F99A47D36C116C807C904E152E5B32E7B4DA
+2026-03-10T15:19:32.7244079+00:00 [upload.extracted] fileHash=3F45A9738A5D828C026C6927F840F99A47D36C116C807C904E152E5B32E7B4DA extractedChars=1124
+2026-03-10T15:19:32.7333506+00:00 [parser.prepare] rawChars=1124 preparedChars=1124 referenceChars=0 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T15:19:32.7366286+00:00 [parser.request] attempt=1 preparedChars=1124 maxTokens=1000
+2026-03-10T15:19:38.0809722+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T15:19:38.1115661+00:00 [upload.completed] recordId=c4b70524-d31e-461b-89cb-d98b849df5e8 fileHash=3F45A9738A5D828C026C6927F840F99A47D36C116C807C904E152E5B32E7B4DA warningCount=0
+2026-03-10T15:21:09.3042705+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-10T15:21:09.7941963+00:00 [upload.extracted] fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB extractedChars=8384
+2026-03-10T15:21:09.8215161+00:00 [parser.prepare] rawChars=8384 preparedChars=8300 referenceChars=244 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T15:21:09.8341717+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=1000
+2026-03-10T15:21:25.2432650+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T15:21:25.2673739+00:00 [upload.completed] recordId=a6b605ba-2ddb-4bd4-8d37-8b7053964277 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB warningCount=0
+2026-03-10T15:37:39.9768485+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV09_Helen_Auto_Ambiguous_Clean.pdf fileSize=2940 fileHash=BE4EE53655F58AAF3E004ABA8A4E54C1D457EFA8AF361C59C52ADA4C59202E5C
+2026-03-10T15:37:41.1030556+00:00 [upload.extracted] fileHash=BE4EE53655F58AAF3E004ABA8A4E54C1D457EFA8AF361C59C52ADA4C59202E5C extractedChars=1149
+2026-03-10T15:37:41.2627298+00:00 [parser.prepare] rawChars=1149 preparedChars=1149 referenceChars=0 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T15:37:41.2681189+00:00 [parser.request] attempt=1 preparedChars=1149 maxTokens=1000
+2026-03-10T15:37:46.6888259+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T15:37:46.8334328+00:00 [upload.completed] recordId=18753a9e-8268-4c76-8043-a0f1ae3a8e92 fileHash=BE4EE53655F58AAF3E004ABA8A4E54C1D457EFA8AF361C59C52ADA4C59202E5C warningCount=0
+2026-03-10T15:38:39.5117834+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV12_Gavin_Yule_Unmatched_Clean.pdf fileSize=2915 fileHash=3F45A9738A5D828C026C6927F840F99A47D36C116C807C904E152E5B32E7B4DA
+2026-03-10T15:38:39.5316689+00:00 [upload.cache-hit] sourceRecordId=c4b70524-d31e-461b-89cb-d98b849df5e8 fileHash=3F45A9738A5D828C026C6927F840F99A47D36C116C807C904E152E5B32E7B4DA
+2026-03-10T15:38:39.5540888+00:00 [upload.duplicate-warnings] recordId=9a46a908-0da6-493b-b3c5-6cdeb6c2a545 warningCount=2
+2026-03-10T15:38:55.2547948+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV11_Erika_Voss_Unmatched_Clean.pdf fileSize=2890 fileHash=BC45406D4C53E546DC9B02F720659800A47483ACC05D44BABCF31F3530B7677C
+2026-03-10T15:38:55.2812602+00:00 [upload.extracted] fileHash=BC45406D4C53E546DC9B02F720659800A47483ACC05D44BABCF31F3530B7677C extractedChars=1149
+2026-03-10T15:38:55.2918806+00:00 [parser.prepare] rawChars=1149 preparedChars=1149 referenceChars=0 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T15:38:55.2986241+00:00 [parser.request] attempt=1 preparedChars=1149 maxTokens=1000
+2026-03-10T15:39:00.5914099+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T15:39:00.6082052+00:00 [upload.completed] recordId=6ab9a26a-de21-4b98-a073-d2c731e828fa fileHash=BC45406D4C53E546DC9B02F720659800A47483ACC05D44BABCF31F3530B7677C warningCount=0
+2026-03-10T15:40:08.4640516+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=OIL&GAS-RESUME-7-(Project Manager & Interface Manager).pdf fileSize=737873 fileHash=05E66681DC963557C46E090C1C96989832509BF7347605C071B97779924E5459
+2026-03-10T15:40:09.5633443+00:00 [upload.extracted] fileHash=05E66681DC963557C46E090C1C96989832509BF7347605C071B97779924E5459 extractedChars=19998
+2026-03-10T15:40:09.5921520+00:00 [parser.prepare] rawChars=19998 preparedChars=12000 referenceChars=225 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-10T15:40:09.6004704+00:00 [parser.request] attempt=1 preparedChars=12000 maxTokens=1000
+2026-03-10T15:40:15.0581539+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-10T15:40:15.0779476+00:00 [upload.completed] recordId=8d419c01-9c1e-4a8b-9fe7-3f1a73b54907 fileHash=05E66681DC963557C46E090C1C96989832509BF7347605C071B97779924E5459 warningCount=0
+2026-03-11T07:44:13.9837164+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV03_Owen_Hartley_Exact_Clean.pdf fileSize=3196 fileHash=A719D716B7430FEF245819DD318677AD573B59485B0DE0B3D705E8C4D2BF0E18
+2026-03-11T07:44:15.3236296+00:00 [upload.extracted] fileHash=A719D716B7430FEF245819DD318677AD573B59485B0DE0B3D705E8C4D2BF0E18 extractedChars=1616
+2026-03-11T07:44:15.5350770+00:00 [parser.prepare] rawChars=1616 preparedChars=1616 referenceChars=0 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-11T07:44:15.5435967+00:00 [parser.request] attempt=1 preparedChars=1616 maxTokens=1000
+2026-03-11T07:44:20.5069218+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-11T07:44:20.5589086+00:00 [role.match] source=parse rawRole=Senior Production Operator standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T07:44:20.5632613+00:00 [role.match] source=parse rawRole=Production Operator standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T07:44:20.5664478+00:00 [role.match] source=parse rawRole=Production Operator standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T07:44:20.5712366+00:00 [role.match] source=parse rawRole=Petroleum Operator standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T07:44:20.6390398+00:00 [upload.completed] recordId=5d62e55d-8aeb-47db-9278-17033f798f75 fileHash=A719D716B7430FEF245819DD318677AD573B59485B0DE0B3D705E8C4D2BF0E18 warningCount=0
+2026-03-11T07:45:44.8554642+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV04_Leila_Mercer_Alias_Clean.pdf fileSize=3020 fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7
+2026-03-11T07:45:44.8716154+00:00 [upload.extracted] fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7 extractedChars=1295
+2026-03-11T07:45:44.8829047+00:00 [parser.prepare] rawChars=1295 preparedChars=1295 referenceChars=217 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-11T07:45:44.8883304+00:00 [parser.request] attempt=1 preparedChars=1295 maxTokens=1000
+2026-03-11T07:45:49.7482756+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-11T07:45:49.7527869+00:00 [role.match] source=parse rawRole=Drilling & Wells Engineer standardRole=Drilling Engineer strategy=heuristic confidence=0.78 needsReview=True details=normalizedRole=drilling & wells engineer
+2026-03-11T07:45:49.7579666+00:00 [role.match] source=parse rawRole=Wells Engineer standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T07:45:49.7629777+00:00 [role.match] source=parse rawRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:45:49.7670831+00:00 [role.match] source=parse rawRole=Petroleum Engineer Intern standardRole=Petroleum Engineer strategy=heuristic confidence=0.78 needsReview=True details=normalizedRole=petroleum engineer intern
+2026-03-11T07:45:49.7842567+00:00 [upload.completed] recordId=07813913-3f55-49ad-b3b0-258ab33478b5 fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7 warningCount=0
+2026-03-11T07:46:15.4580485+00:00 [role.match] source=save rawRole=Drilling & Wells Engineer inputRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:15.4623783+00:00 [role.match] source=save-reviewed rawRole=Drilling & Wells Engineer reviewedRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:15.4666603+00:00 [role.match] source=save rawRole=Wells Engineer inputRole=Well Intervention Engineer standardRole=Well Intervention Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:15.4710943+00:00 [role.match] source=save-reviewed rawRole=Wells Engineer reviewedRole=Well Intervention Engineer standardRole=Well Intervention Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:15.4750526+00:00 [role.match] source=save rawRole=Drilling Engineer inputRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:15.4781725+00:00 [role.match] source=save rawRole=Petroleum Engineer Intern inputRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:15.4816487+00:00 [role.match] source=save-reviewed rawRole=Petroleum Engineer Intern reviewedRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:23.6788780+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV09_Helen_Auto_Ambiguous_Clean.pdf fileSize=2940 fileHash=BE4EE53655F58AAF3E004ABA8A4E54C1D457EFA8AF361C59C52ADA4C59202E5C
+2026-03-11T07:46:23.6862254+00:00 [upload.extracted] fileHash=BE4EE53655F58AAF3E004ABA8A4E54C1D457EFA8AF361C59C52ADA4C59202E5C extractedChars=1149
+2026-03-11T07:46:23.6929874+00:00 [parser.prepare] rawChars=1149 preparedChars=1149 referenceChars=0 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-11T07:46:23.6952841+00:00 [parser.request] attempt=1 preparedChars=1149 maxTokens=1000
+2026-03-11T07:46:28.5409310+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-11T07:46:28.5520761+00:00 [role.match] source=parse rawRole=Site Safety Lead standardRole=HSE Engineer strategy=context confidence=0.66 needsReview=True details=titleScore=0;positive=2;negative=0;total=4
+2026-03-11T07:46:28.5577013+00:00 [role.match] source=parse rawRole=HSSE Coordinator standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T07:46:28.5621746+00:00 [role.match] source=parse rawRole=HSE Officer standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T07:46:28.5662869+00:00 [role.match] source=parse rawRole=Field Administrator standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T07:46:28.5855872+00:00 [upload.completed] recordId=c34e0825-08dd-4acb-8adf-b13db05c190a fileHash=BE4EE53655F58AAF3E004ABA8A4E54C1D457EFA8AF361C59C52ADA4C59202E5C warningCount=0
+2026-03-11T07:46:51.3833085+00:00 [role.match] source=save rawRole=Site Safety Lead inputRole=HSE Engineer standardRole=HSE Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:51.3861738+00:00 [role.match] source=save-reviewed rawRole=Site Safety Lead reviewedRole=HSE Engineer standardRole=HSE Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:51.3886530+00:00 [role.match] source=save rawRole=HSSE Coordinator inputRole=HSE Engineer standardRole=HSE Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:51.3902415+00:00 [role.match] source=save-reviewed rawRole=HSSE Coordinator reviewedRole=HSE Engineer standardRole=HSE Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:51.3916050+00:00 [role.match] source=save rawRole=HSE Officer inputRole=HSE Engineer standardRole=HSE Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:51.3929196+00:00 [role.match] source=save-reviewed rawRole=HSE Officer reviewedRole=HSE Engineer standardRole=HSE Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T07:46:51.3938561+00:00 [role.match] source=save rawRole=Field Administrator inputRole= standardRole= strategy=empty confidence=0.00 needsReview=True details=rawRole empty
+2026-03-11T13:12:39.8983053+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV01_Martin_Reeve_Exact_Clean.pdf fileSize=3494 fileHash=3B6D33364443694E0D00500C912975767A3000BA331CD430493CB15941DE5AAA
+2026-03-11T13:12:41.4286136+00:00 [upload.extracted] fileHash=3B6D33364443694E0D00500C912975767A3000BA331CD430493CB15941DE5AAA extractedChars=2109
+2026-03-11T13:12:41.6635102+00:00 [parser.prepare] rawChars=2109 preparedChars=2109 referenceChars=401 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-11T13:12:41.6689659+00:00 [parser.request] attempt=1 preparedChars=2109 maxTokens=1000
+2026-03-11T13:12:50.2818554+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-11T13:12:50.3601374+00:00 [role.match] source=parse rawRole=Senior Petroleum Engineer standardRole=Petroleum Engineer strategy=heuristic confidence=0.78 needsReview=True details=normalizedRole=senior petroleum engineer
+2026-03-11T13:12:50.3657494+00:00 [role.match] source=parse rawRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:12:50.3702129+00:00 [role.match] source=parse rawRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:12:50.3758871+00:00 [role.match] source=parse rawRole=Petroleum Engineer Intern standardRole=Petroleum Engineer strategy=heuristic confidence=0.78 needsReview=True details=normalizedRole=petroleum engineer intern
+2026-03-11T13:12:50.4642496+00:00 [upload.completed] recordId=a1a5de18-ec12-4949-bc4a-d9e72197493a fileHash=3B6D33364443694E0D00500C912975767A3000BA331CD430493CB15941DE5AAA warningCount=0
+2026-03-11T13:13:19.9975032+00:00 [role.match] source=save rawRole=Senior Petroleum Engineer inputRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:13:20.0014867+00:00 [role.match] source=save-reviewed rawRole=Senior Petroleum Engineer reviewedRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:13:20.0056788+00:00 [role.match] source=save rawRole=Petroleum Engineer inputRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:13:20.0084588+00:00 [role.match] source=save rawRole=Petroleum Engineer inputRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:13:20.0115486+00:00 [role.match] source=save rawRole=Petroleum Engineer Intern inputRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:13:20.0140392+00:00 [role.match] source=save-reviewed rawRole=Petroleum Engineer Intern reviewedRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:13:33.4460936+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV05_Tomas_Iversen_Alias_Clean.pdf fileSize=2986 fileHash=63EFEF631065D85A2626CDB6F00C8C6829A91E01630827F687C86E2C104FC05C
+2026-03-11T13:13:33.4622224+00:00 [upload.extracted] fileHash=63EFEF631065D85A2626CDB6F00C8C6829A91E01630827F687C86E2C104FC05C extractedChars=1300
+2026-03-11T13:13:33.4731784+00:00 [parser.prepare] rawChars=1300 preparedChars=1300 referenceChars=240 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-11T13:13:33.4755236+00:00 [parser.request] attempt=1 preparedChars=1300 maxTokens=1000
+2026-03-11T13:13:39.0533886+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-11T13:13:39.0617530+00:00 [role.match] source=parse rawRole=Asset Integrity Engineer standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T13:13:39.0645421+00:00 [role.match] source=parse rawRole=Mechanical Engineer standardRole=Mechanical Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:13:39.0672445+00:00 [role.match] source=parse rawRole=Reliability Engineer standardRole=Reliability Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:13:39.0703462+00:00 [role.match] source=parse rawRole=Maintenance Engineer standardRole=Maintenance Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:13:39.0815072+00:00 [upload.completed] recordId=c96de605-b871-43a9-8a73-c08e4cae3700 fileHash=63EFEF631065D85A2626CDB6F00C8C6829A91E01630827F687C86E2C104FC05C warningCount=0
+2026-03-11T13:14:01.3468320+00:00 [role.match] source=save rawRole=Asset Integrity Engineer inputRole= standardRole= strategy=empty confidence=0.00 needsReview=True details=rawRole empty
+2026-03-11T13:14:01.3508838+00:00 [role.match] source=save rawRole=Mechanical Engineer inputRole=Mechanical Engineer standardRole=Mechanical Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:14:01.3538402+00:00 [role.match] source=save rawRole=Reliability Engineer inputRole=Reliability Engineer standardRole=Reliability Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:14:01.3573043+00:00 [role.match] source=save rawRole=Maintenance Engineer inputRole=Maintenance Engineer standardRole=Maintenance Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:14:09.7111420+00:00 [role.match] source=save rawRole=Asset Integrity Engineer inputRole= standardRole= strategy=empty confidence=0.00 needsReview=True details=rawRole empty
+2026-03-11T13:14:09.7136066+00:00 [role.match] source=save rawRole=Mechanical Engineer inputRole=Mechanical Engineer standardRole=Mechanical Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:14:09.7155710+00:00 [role.match] source=save rawRole=Reliability Engineer inputRole=Reliability Engineer standardRole=Reliability Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:14:09.7174971+00:00 [role.match] source=save rawRole=Maintenance Engineer inputRole=Maintenance Engineer standardRole=Maintenance Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:14:20.7787685+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV07_Nadia_Kerr_Ambiguous_Clean.pdf fileSize=2961 fileHash=00599594BC33AC760D92086E64200EF120F7CCA0E19D27D34407DF9F4AE4E871
+2026-03-11T13:14:20.7876648+00:00 [upload.extracted] fileHash=00599594BC33AC760D92086E64200EF120F7CCA0E19D27D34407DF9F4AE4E871 extractedChars=1229
+2026-03-11T13:14:20.7947858+00:00 [parser.prepare] rawChars=1229 preparedChars=1229 referenceChars=234 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-11T13:14:20.7960595+00:00 [parser.request] attempt=1 preparedChars=1229 maxTokens=1000
+2026-03-11T13:14:29.1993477+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-11T13:14:29.2023983+00:00 [role.match] source=parse rawRole=Asset Engineer standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T13:14:29.2049205+00:00 [role.match] source=parse rawRole=Field Engineer standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T13:14:29.2083823+00:00 [role.match] source=parse rawRole=Production Technologist standardRole=Production Engineer strategy=alias confidence=0.95 needsReview=False details=alias=Production Technologist
+2026-03-11T13:14:29.2115373+00:00 [role.match] source=parse rawRole=Junior Petroleum standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T13:14:29.2190530+00:00 [upload.completed] recordId=e13befb3-894e-4125-be2b-c1a4b554149b fileHash=00599594BC33AC760D92086E64200EF120F7CCA0E19D27D34407DF9F4AE4E871 warningCount=0
+2026-03-11T13:15:18.4597819+00:00 [role.match] source=save rawRole=Asset Engineer inputRole= standardRole= strategy=empty confidence=0.00 needsReview=True details=rawRole empty
+2026-03-11T13:15:18.4610512+00:00 [role.match] source=save rawRole=Field Engineer inputRole= standardRole= strategy=empty confidence=0.00 needsReview=True details=rawRole empty
+2026-03-11T13:15:18.4635769+00:00 [role.match] source=save rawRole=Production Technologist inputRole=Production Engineer standardRole=Production Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:15:18.4650340+00:00 [role.match] source=save rawRole=Junior Petroleum inputRole= standardRole= strategy=empty confidence=0.00 needsReview=True details=rawRole empty
+2026-03-11T13:15:28.8738420+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV11_Erika_Voss_Unmatched_Clean.pdf fileSize=2890 fileHash=BC45406D4C53E546DC9B02F720659800A47483ACC05D44BABCF31F3530B7677C
+2026-03-11T13:15:28.8783172+00:00 [upload.extracted] fileHash=BC45406D4C53E546DC9B02F720659800A47483ACC05D44BABCF31F3530B7677C extractedChars=1149
+2026-03-11T13:15:28.8861521+00:00 [parser.prepare] rawChars=1149 preparedChars=1149 referenceChars=68 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-11T13:15:28.8875005+00:00 [parser.request] attempt=1 preparedChars=1149 maxTokens=1000
+2026-03-11T13:15:35.1311733+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-11T13:15:35.1331021+00:00 [role.match] source=parse rawRole=Marine Personnel Coordinator standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T13:15:35.1348324+00:00 [role.match] source=parse rawRole=Logistics Planner standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T13:15:35.1365044+00:00 [role.match] source=parse rawRole=Mobility Administrator standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T13:15:35.1382856+00:00 [role.match] source=parse rawRole=Office Assistant standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T13:15:35.1478421+00:00 [upload.completed] recordId=e781345a-33dc-4f22-9e42-0b79b4c2573f fileHash=BC45406D4C53E546DC9B02F720659800A47483ACC05D44BABCF31F3530B7677C warningCount=0
+2026-03-11T13:15:49.1330584+00:00 [role.match] source=save rawRole=Marine Personnel Coordinator inputRole= standardRole= strategy=empty confidence=0.00 needsReview=True details=rawRole empty
+2026-03-11T13:15:49.1347386+00:00 [role.match] source=save rawRole=Logistics Planner inputRole= standardRole= strategy=empty confidence=0.00 needsReview=True details=rawRole empty
+2026-03-11T13:15:49.1358921+00:00 [role.match] source=save rawRole=Mobility Administrator inputRole= standardRole= strategy=empty confidence=0.00 needsReview=True details=rawRole empty
+2026-03-11T13:15:49.1386124+00:00 [role.match] source=save rawRole=Office Assistant inputRole= standardRole= strategy=empty confidence=0.00 needsReview=True details=rawRole empty
+2026-03-11T13:16:01.8110733+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV John Doe.pdf fileSize=155610 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB
+2026-03-11T13:16:02.0786446+00:00 [upload.extracted] fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB extractedChars=8384
+2026-03-11T13:16:02.0933259+00:00 [parser.prepare] rawChars=8384 preparedChars=8300 referenceChars=478 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-11T13:16:02.0962994+00:00 [parser.request] attempt=1 preparedChars=8300 maxTokens=1000
+2026-03-11T13:16:15.9470069+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-11T13:16:15.9491499+00:00 [role.match] source=parse rawRole=Field Team Lead standardRole=Field Supervisor strategy=alias confidence=0.95 needsReview=False details=alias=Field Team Lead
+2026-03-11T13:16:15.9505878+00:00 [role.match] source=parse rawRole=Senior Drilling Supervisor standardRole=Drilling Supervisor strategy=alias confidence=0.95 needsReview=False details=alias=Senior Drilling Supervisor
+2026-03-11T13:16:15.9519924+00:00 [role.match] source=parse rawRole=Senior Drilling Engineer standardRole=Drilling Engineer strategy=alias confidence=0.95 needsReview=False details=alias=Senior Drilling Engineer
+2026-03-11T13:16:15.9532639+00:00 [role.match] source=parse rawRole=Night Drilling Supervisor standardRole=Drilling Supervisor strategy=alias confidence=0.95 needsReview=False details=alias=Night Drilling Supervisor
+2026-03-11T13:16:15.9552185+00:00 [role.match] source=parse rawRole=Senior Drilling and Workover Supervisor standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T13:16:15.9569528+00:00 [role.match] source=parse rawRole=Senior Drilling Supervisor standardRole=Drilling Supervisor strategy=alias confidence=0.95 needsReview=False details=alias=Senior Drilling Supervisor
+2026-03-11T13:16:15.9584948+00:00 [role.match] source=parse rawRole=Drilling Superintendent standardRole=Drilling Superintendent strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:16:15.9607812+00:00 [role.match] source=parse rawRole=Head of Drilling Supervision Department standardRole=Drilling Engineer strategy=context confidence=0.66 needsReview=True details=titleScore=0;positive=2;negative=0;total=4
+2026-03-11T13:16:15.9623526+00:00 [role.match] source=parse rawRole=Senior Workover Engineer standardRole=Well Intervention Engineer strategy=heuristic confidence=0.78 needsReview=True details=normalizedRole=senior workover engineer
+2026-03-11T13:16:15.9640769+00:00 [role.match] source=parse rawRole=Senior Drilling Engineer standardRole=Drilling Engineer strategy=alias confidence=0.95 needsReview=False details=alias=Senior Drilling Engineer
+2026-03-11T13:16:15.9663670+00:00 [role.match] source=parse rawRole=Senior Drilling Engineer standardRole=Drilling Engineer strategy=alias confidence=0.95 needsReview=False details=alias=Senior Drilling Engineer
+2026-03-11T13:16:15.9781772+00:00 [upload.completed] recordId=bc29f4d3-47b5-4924-9f21-d8e96a6c0608 fileHash=447F2B5B983ED98FA68BC0FFF5C8119EC43C16758DC55C021DB3905E140243EB warningCount=0
+2026-03-11T13:17:03.1387914+00:00 [role.match] source=save rawRole=Field Team Lead inputRole=Field Supervisor standardRole=Field Supervisor strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1419067+00:00 [role.match] source=save rawRole=Senior Drilling Supervisor inputRole=Drilling Supervisor standardRole=Drilling Supervisor strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1442814+00:00 [role.match] source=save rawRole=Senior Drilling Engineer inputRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1467242+00:00 [role.match] source=save rawRole=Night Drilling Supervisor inputRole=Drilling Supervisor standardRole=Drilling Supervisor strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1491072+00:00 [role.match] source=save rawRole=Senior Drilling and Workover Supervisor inputRole=Drilling Supervisor standardRole=Drilling Supervisor strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1518758+00:00 [role.match] source=save-reviewed rawRole=Senior Drilling and Workover Supervisor reviewedRole=Drilling Supervisor standardRole=Drilling Supervisor strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1547622+00:00 [role.match] source=save rawRole=Senior Drilling Supervisor inputRole=Drilling Supervisor standardRole=Drilling Supervisor strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1571703+00:00 [role.match] source=save rawRole=Drilling Superintendent inputRole=Drilling Superintendent standardRole=Drilling Superintendent strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1592262+00:00 [role.match] source=save rawRole=Head of Drilling Supervision Department inputRole=Drilling Supervisor standardRole=Drilling Supervisor strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1614423+00:00 [role.match] source=save-reviewed rawRole=Head of Drilling Supervision Department reviewedRole=Drilling Supervisor standardRole=Drilling Supervisor strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1639526+00:00 [role.match] source=save rawRole=Senior Workover Engineer inputRole=Well Intervention Engineer standardRole=Well Intervention Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1668140+00:00 [role.match] source=save-reviewed rawRole=Senior Workover Engineer reviewedRole=Well Intervention Engineer standardRole=Well Intervention Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1698186+00:00 [role.match] source=save rawRole=Senior Drilling Engineer inputRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T13:17:03.1729241+00:00 [role.match] source=save rawRole=Senior Drilling Engineer inputRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name

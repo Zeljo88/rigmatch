@@ -2,9 +2,15 @@ namespace RigMatch.Api.Services;
 
 public interface IRoleStandardizationService
 {
-    Task<RoleMatchResult> MatchRoleAsync(string? rawRole, CancellationToken cancellationToken = default);
+    Task<RoleMatchResult> MatchRoleAsync(
+        string? rawRole,
+        string? description = null,
+        CancellationToken cancellationToken = default);
 
-    Task<string> StandardizeRoleAsync(string? rawRole, CancellationToken cancellationToken = default);
+    Task<string> StandardizeRoleAsync(
+        string? rawRole,
+        string? description = null,
+        CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<string>> StandardizeRoleListAsync(IEnumerable<string>? rawRoles, CancellationToken cancellationToken = default);
 
@@ -16,4 +22,6 @@ public sealed record RoleMatchResult(
     int? StandardRoleId,
     string StandardRoleName,
     double MatchConfidence,
-    bool NeedsReview);
+    bool NeedsReview,
+    string MatchStrategy = "",
+    string MatchDetails = "");

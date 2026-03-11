@@ -11,4 +11,6 @@ public class RoleAlias
     public string Alias { get; set; } = string.Empty;
 
     public string AliasNormalized { get; set; } = string.Empty;
+
+    public bool RequiresReview { get; set; }
 }

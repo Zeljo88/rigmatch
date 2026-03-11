@@ -19,4 +19,6 @@ public class CvRecord
     public DateTimeOffset CreatedAtUtc { get; set; }
 
     public DateTimeOffset? UpdatedAtUtc { get; set; }
+
+    public ICollection<SuggestedRoleAlias> SuggestedRoleAliases { get; set; } = new List<SuggestedRoleAlias>();
 }

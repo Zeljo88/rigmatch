@@ -16,6 +16,7 @@ public class CompanyCvController : ControllerBase
     private const string CompanyHeaderName = "X-Company-Id";
     private const string DefaultCompanyId = "rigmatch-demo-company";
     private const long MaxFileSizeBytes = 10 * 1024 * 1024;
+    private const int SuggestedAliasPromotionThreshold = 3;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -219,6 +220,7 @@ public class CompanyCvController : ControllerBase
 
         record.FinalJson = await NormalizeAndSerializeFinalProfileAsync(request.FinalProfile, cancellationToken);
         record.UpdatedAtUtc = DateTimeOffset.UtcNow;
+        await UpsertSuggestedAliasesAsync(company.Id, record.Id, request.FinalProfile, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -630,6 +632,104 @@ public class CompanyCvController : ControllerBase
         return JsonSerializer.Serialize(normalized, StorageJsonOptions);
     }
 
+    private async Task UpsertSuggestedAliasesAsync(
+        Guid companyId,
+        Guid recordId,
+        JsonElement finalProfile,
+        CancellationToken cancellationToken)
+    {
+        var payload = JsonSerializer.Deserialize<EditableProfilePayload>(finalProfile.GetRawText(), JsonOptions);
+        if (payload?.Experiences is null)
+        {
+            return;
+        }
+
+        foreach (var experience in payload.Experiences)
+        {
+            if (!(experience.ReviewedByUser))
+            {
+                continue;
+            }
+
+            var rawAlias = (experience.RawRoleTitle ?? experience.Role ?? string.Empty).Trim();
+            var standardRoleName = (experience.StandardRoleName ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(rawAlias) || string.IsNullOrWhiteSpace(standardRoleName))
+            {
+                continue;
+            }
+
+            var rawAliasNormalized = RoleCatalogSeeder.Normalize(rawAlias);
+            var standardRoleNormalized = RoleCatalogSeeder.Normalize(standardRoleName);
+            if (rawAliasNormalized.Length == 0 || rawAliasNormalized == standardRoleNormalized)
+            {
+                continue;
+            }
+
+            var standardRole = await _dbContext.StandardRoles
+                .FirstOrDefaultAsync(role => role.IsActive && role.Name == standardRoleName, cancellationToken);
+
+            if (standardRole is null)
+            {
+                continue;
+            }
+
+            var existingAlias = await _dbContext.RoleAliases
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    alias => alias.StandardRoleId == standardRole.Id && alias.AliasNormalized == rawAliasNormalized,
+                    cancellationToken);
+
+            if (existingAlias is not null)
+            {
+                continue;
+            }
+
+            var suggestedAlias = await _dbContext.SuggestedRoleAliases
+                .FirstOrDefaultAsync(
+                    alias => alias.CompanyId == companyId &&
+                             alias.StandardRoleId == standardRole.Id &&
+                             alias.RawAliasNormalized == rawAliasNormalized,
+                    cancellationToken);
+
+            var now = DateTimeOffset.UtcNow;
+            if (suggestedAlias is null)
+            {
+                _dbContext.SuggestedRoleAliases.Add(new SuggestedRoleAlias
+                {
+                    CompanyId = companyId,
+                    LastCvRecordId = recordId,
+                    StandardRoleId = standardRole.Id,
+                    RawAlias = rawAlias,
+                    RawAliasNormalized = rawAliasNormalized,
+                    ConfirmationCount = 1,
+                    FirstSuggestedAtUtc = now,
+                    LastSuggestedAtUtc = now
+                });
+                continue;
+            }
+
+            suggestedAlias.RawAlias = rawAlias;
+            suggestedAlias.LastCvRecordId = recordId;
+            suggestedAlias.LastSuggestedAtUtc = now;
+            suggestedAlias.ConfirmationCount += 1;
+
+            if (suggestedAlias.ConfirmationCount < SuggestedAliasPromotionThreshold)
+            {
+                continue;
+            }
+
+            _dbContext.RoleAliases.Add(new RoleAlias
+            {
+                StandardRoleId = standardRole.Id,
+                Alias = rawAlias,
+                AliasNormalized = rawAliasNormalized,
+                RequiresReview = true
+            });
+
+            _dbContext.SuggestedRoleAliases.Remove(suggestedAlias);
+        }
+    }
+
     private async Task<IReadOnlyList<string>> NormalizeRolesAsync(
         IEnumerable<string>? rolesFromPayload,
         IReadOnlyList<ParsedExperienceEntry> normalizedExperiences,
@@ -662,7 +762,14 @@ public class CompanyCvController : ControllerBase
         {
             var rawRole = (exp.RawRoleTitle ?? exp.Role ?? string.Empty).Trim();
             var roleToMatch = (exp.StandardRoleName ?? exp.Role ?? rawRole).Trim();
-            var match = await _roleStandardizationService.MatchRoleAsync(roleToMatch, cancellationToken);
+            var match = await _roleStandardizationService.MatchRoleAsync(
+                roleToMatch,
+                (exp.Description ?? string.Empty).Trim(),
+                cancellationToken);
+            await _diagnosticsLogger.LogAsync(
+                "role.match",
+                $"source=save rawRole={rawRole} inputRole={roleToMatch} standardRole={match.StandardRoleName} strategy={match.MatchStrategy} confidence={match.MatchConfidence:0.00} needsReview={match.NeedsReview} details={match.MatchDetails}",
+                cancellationToken);
 
             var standardizedRoleId = match.StandardRoleId;
             var standardizedRoleName = match.StandardRoleName;
@@ -672,7 +779,11 @@ public class CompanyCvController : ControllerBase
 
             if (!string.IsNullOrWhiteSpace(exp.StandardRoleName) && reviewedByUser)
             {
-                var reviewedMatch = await _roleStandardizationService.MatchRoleAsync(exp.StandardRoleName, cancellationToken);
+                var reviewedMatch = await _roleStandardizationService.MatchRoleAsync(exp.StandardRoleName, null, cancellationToken);
+                await _diagnosticsLogger.LogAsync(
+                    "role.match",
+                    $"source=save-reviewed rawRole={rawRole} reviewedRole={exp.StandardRoleName} standardRole={reviewedMatch.StandardRoleName} strategy={reviewedMatch.MatchStrategy} confidence={reviewedMatch.MatchConfidence:0.00} needsReview={reviewedMatch.NeedsReview} details={reviewedMatch.MatchDetails}",
+                    cancellationToken);
                 standardizedRoleId = reviewedMatch.StandardRoleId;
                 standardizedRoleName = reviewedMatch.StandardRoleName;
                 matchConfidence = Math.Max(reviewedMatch.MatchConfidence, 0.99d);

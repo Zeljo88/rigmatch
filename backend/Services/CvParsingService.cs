@@ -40,6 +40,7 @@ public sealed class CvParsingService : ICvParsingService
     private readonly HttpClient _httpClient;
     private readonly IWebHostEnvironment _environment;
     private readonly IRoleStandardizationService _roleStandardizationService;
+    private readonly IParsingReferenceService _parsingReferenceService;
     private readonly ICvDiagnosticsLogger _diagnosticsLogger;
     private readonly IOptions<CvParsingOptions> _options;
     private readonly ILogger<CvParsingService> _logger;
@@ -78,6 +79,7 @@ public sealed class CvParsingService : ICvParsingService
         HttpClient httpClient,
         IWebHostEnvironment environment,
         IRoleStandardizationService roleStandardizationService,
+        IParsingReferenceService parsingReferenceService,
         ICvDiagnosticsLogger diagnosticsLogger,
         IOptions<CvParsingOptions> options,
         ILogger<CvParsingService> logger)
@@ -85,6 +87,7 @@ public sealed class CvParsingService : ICvParsingService
         _httpClient = httpClient;
         _environment = environment;
         _roleStandardizationService = roleStandardizationService;
+        _parsingReferenceService = parsingReferenceService;
         _diagnosticsLogger = diagnosticsLogger;
         _options = options;
         _logger = logger;
@@ -99,9 +102,10 @@ public sealed class CvParsingService : ICvParsingService
 
         var options = _options.Value;
         var normalizedText = PrepareCvText(cvText, options.MaxTextChars);
+        var referenceBlock = await _parsingReferenceService.BuildPromptReferenceBlockAsync(normalizedText, cancellationToken);
         await _diagnosticsLogger.LogAsync(
             "parser.prepare",
-            $"rawChars={cvText.Length} preparedChars={normalizedText.Length} maxTextChars={options.MaxTextChars} maxCompletionTokens={options.MaxCompletionTokens}",
+            $"rawChars={cvText.Length} preparedChars={normalizedText.Length} referenceChars={referenceBlock.Length} maxTextChars={options.MaxTextChars} maxCompletionTokens={options.MaxCompletionTokens}",
             cancellationToken);
 
         if (_environment.IsDevelopment() && options.UseMockInDevelopment)
@@ -158,6 +162,7 @@ public sealed class CvParsingService : ICvParsingService
                                   ],
                                 }
                                 
+                                {{(string.IsNullOrWhiteSpace(referenceBlock) ? string.Empty : referenceBlock + "\n\n")}}
                                 If uncertain, leave fields null/[] instead of guessing.
                                 
                                 CV text:
@@ -427,6 +432,11 @@ public sealed class CvParsingService : ICvParsingService
         {
             var match = await _roleStandardizationService.MatchRoleAsync(
                 (item.Role ?? string.Empty).Trim(),
+                (item.Description ?? string.Empty).Trim(),
+                cancellationToken);
+            await _diagnosticsLogger.LogAsync(
+                "role.match",
+                $"source=parse rawRole={BuildPreview(item.Role ?? string.Empty)} standardRole={match.StandardRoleName} strategy={match.MatchStrategy} confidence={match.MatchConfidence:0.00} needsReview={match.NeedsReview} details={match.MatchDetails}",
                 cancellationToken);
 
             var normalizedItem = new ParsedExperienceEntry(
@@ -449,7 +459,7 @@ public sealed class CvParsingService : ICvParsingService
                 continue;
             }
 
-            result.Add(normalizedItem);
+                result.Add(normalizedItem);
             if (result.Count == 12)
             {
                 break;
