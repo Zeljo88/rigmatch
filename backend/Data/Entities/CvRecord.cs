@@ -10,6 +10,8 @@ public class CvRecord
 
     public string FileUrl { get; set; } = string.Empty;
 
+    public string FileHash { get; set; } = string.Empty;
+
     public string ParsedDraftJson { get; set; } = string.Empty;
 
     public string? FinalJson { get; set; }
@@ -17,4 +19,6 @@ public class CvRecord
     public DateTimeOffset CreatedAtUtc { get; set; }
 
     public DateTimeOffset? UpdatedAtUtc { get; set; }
+
+    public ICollection<SuggestedRoleAlias> SuggestedRoleAliases { get; set; } = new List<SuggestedRoleAlias>();
 }

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RigMatch.Api.Data;
@@ -15,6 +16,7 @@ public class CompanyCvController : ControllerBase
     private const string CompanyHeaderName = "X-Company-Id";
     private const string DefaultCompanyId = "rigmatch-demo-company";
     private const long MaxFileSizeBytes = 10 * 1024 * 1024;
+    private const int SuggestedAliasPromotionThreshold = 3;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -30,6 +32,8 @@ public class CompanyCvController : ControllerBase
     private readonly IWebHostEnvironment _environment;
     private readonly ICvTextExtractionService _cvTextExtractionService;
     private readonly ICvParsingService _cvParsingService;
+    private readonly ICvParsingGate _cvParsingGate;
+    private readonly ICvDiagnosticsLogger _diagnosticsLogger;
     private readonly IRoleStandardizationService _roleStandardizationService;
     private readonly ILogger<CompanyCvController> _logger;
 
@@ -38,6 +42,8 @@ public class CompanyCvController : ControllerBase
         IWebHostEnvironment environment,
         ICvTextExtractionService cvTextExtractionService,
         ICvParsingService cvParsingService,
+        ICvParsingGate cvParsingGate,
+        ICvDiagnosticsLogger diagnosticsLogger,
         IRoleStandardizationService roleStandardizationService,
         ILogger<CompanyCvController> logger)
     {
@@ -45,6 +51,8 @@ public class CompanyCvController : ControllerBase
         _environment = environment;
         _cvTextExtractionService = cvTextExtractionService;
         _cvParsingService = cvParsingService;
+        _cvParsingGate = cvParsingGate;
+        _diagnosticsLogger = diagnosticsLogger;
         _roleStandardizationService = roleStandardizationService;
         _logger = logger;
     }
@@ -64,11 +72,72 @@ public class CompanyCvController : ControllerBase
 
         var company = await GetOrCreateCompanyAsync(cancellationToken);
         var storedFile = await SaveUploadedFileAsync(file!, cancellationToken);
+        var fileHash = await ComputeFileHashAsync(storedFile.AbsolutePath, cancellationToken);
+        await _diagnosticsLogger.LogAsync(
+            "upload.received",
+            $"companyId={company.Id} fileName={file!.FileName} fileSize={file.Length} fileHash={fileHash}",
+            cancellationToken);
+
+        var cachedCandidates = await _dbContext.CvRecords
+            .AsNoTracking()
+            .Where(record => record.FileHash == fileHash && record.ParsedDraftJson != string.Empty)
+            .ToListAsync(cancellationToken);
+
+        var cachedRecord = cachedCandidates
+            .OrderByDescending(record => record.UpdatedAtUtc ?? record.CreatedAtUtc)
+            .FirstOrDefault();
+
+        if (cachedRecord is not null)
+        {
+            var cachedProfile = JsonSerializer.Deserialize<ParsedCandidateProfile>(cachedRecord.ParsedDraftJson, JsonOptions);
+            if (cachedProfile is not null)
+            {
+                await _diagnosticsLogger.LogAsync(
+                    "upload.cache-hit",
+                    $"sourceRecordId={cachedRecord.Id} fileHash={fileHash}",
+                    cancellationToken);
+
+                var cachedUploadRecord = new CvRecord
+                {
+                    Id = Guid.NewGuid(),
+                    CompanyId = company.Id,
+                    FileUrl = storedFile.StoragePath,
+                    FileHash = fileHash,
+                    ParsedDraftJson = cachedRecord.ParsedDraftJson,
+                    CreatedAtUtc = DateTimeOffset.UtcNow
+                };
+
+                _dbContext.CvRecords.Add(cachedUploadRecord);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                var cachedDuplicateWarnings = await BuildDuplicateWarningsAsync(
+                    company.Id,
+                    fileHash,
+                    cachedProfile,
+                    cachedUploadRecord.Id,
+                    cancellationToken);
+                await _diagnosticsLogger.LogAsync(
+                    "upload.duplicate-warnings",
+                    $"recordId={cachedUploadRecord.Id} warningCount={cachedDuplicateWarnings.Count}",
+                    cancellationToken);
+
+                return Ok(new CompanyCvUploadResponse(
+                    cachedUploadRecord.Id,
+                    cachedUploadRecord.FileUrl,
+                    cachedProfile,
+                    cachedUploadRecord.CreatedAtUtc,
+                    cachedDuplicateWarnings));
+            }
+        }
 
         string extractedText;
         try
         {
             extractedText = await _cvTextExtractionService.ExtractTextFromPdfAsync(storedFile.AbsolutePath, cancellationToken);
+            await _diagnosticsLogger.LogAsync(
+                "upload.extracted",
+                $"fileHash={fileHash} extractedChars={extractedText.Length}",
+                cancellationToken);
         }
         catch (InvalidDataException)
         {
@@ -78,7 +147,9 @@ public class CompanyCvController : ControllerBase
         ParsedCandidateProfile parsedProfile;
         try
         {
-            parsedProfile = await _cvParsingService.ParseCvTextAsync(extractedText, cancellationToken);
+            parsedProfile = await _cvParsingGate.ExecuteAsync(
+                token => _cvParsingService.ParseCvTextAsync(extractedText, token),
+                cancellationToken);
         }
         catch (AiServiceException ex) when (ex.StatusCode == 429)
         {
@@ -99,6 +170,7 @@ public class CompanyCvController : ControllerBase
             Id = Guid.NewGuid(),
             CompanyId = company.Id,
             FileUrl = storedFile.StoragePath,
+            FileHash = fileHash,
             ParsedDraftJson = JsonSerializer.Serialize(parsedProfile, StorageJsonOptions),
             CreatedAtUtc = DateTimeOffset.UtcNow
         };
@@ -106,11 +178,23 @@ public class CompanyCvController : ControllerBase
         _dbContext.CvRecords.Add(record);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
+        var duplicateWarnings = await BuildDuplicateWarningsAsync(
+            company.Id,
+            fileHash,
+            parsedProfile,
+            record.Id,
+            cancellationToken);
+        await _diagnosticsLogger.LogAsync(
+            "upload.completed",
+            $"recordId={record.Id} fileHash={fileHash} warningCount={duplicateWarnings.Count}",
+            cancellationToken);
+
         return Ok(new CompanyCvUploadResponse(
             record.Id,
             record.FileUrl,
             parsedProfile,
-            record.CreatedAtUtc));
+            record.CreatedAtUtc,
+            duplicateWarnings));
     }
 
     [HttpPost("cv/{id:guid}/save")]
@@ -136,6 +220,7 @@ public class CompanyCvController : ControllerBase
 
         record.FinalJson = await NormalizeAndSerializeFinalProfileAsync(request.FinalProfile, cancellationToken);
         record.UpdatedAtUtc = DateTimeOffset.UtcNow;
+        await UpsertSuggestedAliasesAsync(company.Id, record.Id, request.FinalProfile, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -426,6 +511,98 @@ public class CompanyCvController : ControllerBase
         return values?.Any(v => Contains(v, search)) ?? false;
     }
 
+    private async Task<IReadOnlyList<CompanyCvDuplicateWarning>> BuildDuplicateWarningsAsync(
+        Guid companyId,
+        string fileHash,
+        ParsedCandidateProfile parsedProfile,
+        Guid currentRecordId,
+        CancellationToken cancellationToken)
+    {
+        var records = await _dbContext.CvRecords
+            .AsNoTracking()
+            .Where(record => record.CompanyId == companyId && record.Id != currentRecordId)
+            .ToListAsync(cancellationToken);
+
+        var warnings = new List<CompanyCvDuplicateWarning>();
+
+        foreach (var record in records.Where(record => record.FileHash == fileHash))
+        {
+            warnings.Add(new CompanyCvDuplicateWarning(
+                "exact",
+                "This exact CV file already exists in your library.",
+                record.Id));
+        }
+
+        var existingProfiles = records
+            .Select(record => new
+            {
+                record.Id,
+                Snapshot = ParseProfileSnapshot(record.FinalJson ?? record.ParsedDraftJson)
+            })
+            .Where(item => item.Snapshot is not null)
+            .ToArray();
+
+        var normalizedEmail = NormalizeIdentityValue(parsedProfile.Email);
+        var normalizedPhone = NormalizePhone(parsedProfile.PhoneNumber);
+        var normalizedName = NormalizeIdentityValue(parsedProfile.Name);
+
+        foreach (var existing in existingProfiles)
+        {
+            var snapshot = existing.Snapshot!;
+            var existingEmail = NormalizeIdentityValue(snapshot.Email);
+            var existingPhone = NormalizePhone(snapshot.PhoneNumber);
+            var existingName = NormalizeIdentityValue(snapshot.Name);
+
+            if (!string.IsNullOrWhiteSpace(normalizedEmail) && normalizedEmail == existingEmail)
+            {
+                warnings.Add(new CompanyCvDuplicateWarning(
+                    "probable",
+                    $"Possible duplicate candidate: matching email with {snapshot.Name ?? "an existing record"}.",
+                    existing.Id));
+                continue;
+            }
+
+            if (!string.IsNullOrWhiteSpace(normalizedPhone) && normalizedPhone == existingPhone)
+            {
+                warnings.Add(new CompanyCvDuplicateWarning(
+                    "probable",
+                    $"Possible duplicate candidate: matching phone number with {snapshot.Name ?? "an existing record"}.",
+                    existing.Id));
+                continue;
+            }
+
+            if (!string.IsNullOrWhiteSpace(normalizedName) && normalizedName == existingName)
+            {
+                warnings.Add(new CompanyCvDuplicateWarning(
+                    "possible",
+                    $"Possible duplicate candidate: matching name with {snapshot.Name ?? "an existing record"}.",
+                    existing.Id));
+            }
+        }
+
+        return warnings
+            .GroupBy(warning => $"{warning.Type}|{warning.ExistingCvId}|{warning.Message}", StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .ToArray();
+    }
+
+    private static string NormalizeIdentityValue(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? string.Empty
+            : value.Trim().ToLowerInvariant();
+    }
+
+    private static string NormalizePhone(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return new string(value.Where(char.IsDigit).ToArray());
+    }
+
     private async Task<string> NormalizeAndSerializeFinalProfileAsync(
         JsonElement finalProfile,
         CancellationToken cancellationToken)
@@ -434,6 +611,9 @@ public class CompanyCvController : ControllerBase
                       ?? new EditableProfilePayload();
 
         var experiences = await NormalizeExperiencesAsync(payload.Experiences, cancellationToken);
+        var totalExperienceYears = experiences.Count > 0
+            ? RoleExperienceCalculator.CalculateTotalYears(experiences)
+            : (int)Math.Round(Math.Max(payload.ExperienceYears ?? 0d, 0d), MidpointRounding.AwayFromZero);
 
         var normalized = new NormalizedProfilePayload(
             (payload.Name ?? string.Empty).Trim(),
@@ -445,11 +625,109 @@ public class CompanyCvController : ControllerBase
             NormalizeList(payload.Companies),
             NormalizeList(payload.Skills),
             NormalizeList(payload.Certifications),
-            (int)Math.Round(Math.Max(payload.ExperienceYears ?? 0d, 0d), MidpointRounding.AwayFromZero),
+            totalExperienceYears,
             experiences,
             RoleExperienceCalculator.Calculate(experiences));
 
         return JsonSerializer.Serialize(normalized, StorageJsonOptions);
+    }
+
+    private async Task UpsertSuggestedAliasesAsync(
+        Guid companyId,
+        Guid recordId,
+        JsonElement finalProfile,
+        CancellationToken cancellationToken)
+    {
+        var payload = JsonSerializer.Deserialize<EditableProfilePayload>(finalProfile.GetRawText(), JsonOptions);
+        if (payload?.Experiences is null)
+        {
+            return;
+        }
+
+        foreach (var experience in payload.Experiences)
+        {
+            if (!(experience.ReviewedByUser))
+            {
+                continue;
+            }
+
+            var rawAlias = (experience.RawRoleTitle ?? experience.Role ?? string.Empty).Trim();
+            var standardRoleName = (experience.StandardRoleName ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(rawAlias) || string.IsNullOrWhiteSpace(standardRoleName))
+            {
+                continue;
+            }
+
+            var rawAliasNormalized = RoleCatalogSeeder.Normalize(rawAlias);
+            var standardRoleNormalized = RoleCatalogSeeder.Normalize(standardRoleName);
+            if (rawAliasNormalized.Length == 0 || rawAliasNormalized == standardRoleNormalized)
+            {
+                continue;
+            }
+
+            var standardRole = await _dbContext.StandardRoles
+                .FirstOrDefaultAsync(role => role.IsActive && role.Name == standardRoleName, cancellationToken);
+
+            if (standardRole is null)
+            {
+                continue;
+            }
+
+            var existingAlias = await _dbContext.RoleAliases
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    alias => alias.StandardRoleId == standardRole.Id && alias.AliasNormalized == rawAliasNormalized,
+                    cancellationToken);
+
+            if (existingAlias is not null)
+            {
+                continue;
+            }
+
+            var suggestedAlias = await _dbContext.SuggestedRoleAliases
+                .FirstOrDefaultAsync(
+                    alias => alias.CompanyId == companyId &&
+                             alias.StandardRoleId == standardRole.Id &&
+                             alias.RawAliasNormalized == rawAliasNormalized,
+                    cancellationToken);
+
+            var now = DateTimeOffset.UtcNow;
+            if (suggestedAlias is null)
+            {
+                _dbContext.SuggestedRoleAliases.Add(new SuggestedRoleAlias
+                {
+                    CompanyId = companyId,
+                    LastCvRecordId = recordId,
+                    StandardRoleId = standardRole.Id,
+                    RawAlias = rawAlias,
+                    RawAliasNormalized = rawAliasNormalized,
+                    ConfirmationCount = 1,
+                    FirstSuggestedAtUtc = now,
+                    LastSuggestedAtUtc = now
+                });
+                continue;
+            }
+
+            suggestedAlias.RawAlias = rawAlias;
+            suggestedAlias.LastCvRecordId = recordId;
+            suggestedAlias.LastSuggestedAtUtc = now;
+            suggestedAlias.ConfirmationCount += 1;
+
+            if (suggestedAlias.ConfirmationCount < SuggestedAliasPromotionThreshold)
+            {
+                continue;
+            }
+
+            _dbContext.RoleAliases.Add(new RoleAlias
+            {
+                StandardRoleId = standardRole.Id,
+                Alias = rawAlias,
+                AliasNormalized = rawAliasNormalized,
+                RequiresReview = true
+            });
+
+            _dbContext.SuggestedRoleAliases.Remove(suggestedAlias);
+        }
     }
 
     private async Task<IReadOnlyList<string>> NormalizeRolesAsync(
@@ -463,9 +741,11 @@ public class CompanyCvController : ControllerBase
             return direct;
         }
 
-        return await _roleStandardizationService.StandardizeRoleListAsync(
-            normalizedExperiences.Select(exp => exp.StandardRoleName),
-            cancellationToken);
+        return normalizedExperiences
+            .Select(exp => !string.IsNullOrWhiteSpace(exp.StandardRoleName) ? exp.StandardRoleName : exp.RawRoleTitle)
+            .Where(role => !string.IsNullOrWhiteSpace(role))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private async Task<IReadOnlyList<ParsedExperienceEntry>> NormalizeExperiencesAsync(
@@ -482,7 +762,14 @@ public class CompanyCvController : ControllerBase
         {
             var rawRole = (exp.RawRoleTitle ?? exp.Role ?? string.Empty).Trim();
             var roleToMatch = (exp.StandardRoleName ?? exp.Role ?? rawRole).Trim();
-            var match = await _roleStandardizationService.MatchRoleAsync(roleToMatch, cancellationToken);
+            var match = await _roleStandardizationService.MatchRoleAsync(
+                roleToMatch,
+                (exp.Description ?? string.Empty).Trim(),
+                cancellationToken);
+            await _diagnosticsLogger.LogAsync(
+                "role.match",
+                $"source=save rawRole={rawRole} inputRole={roleToMatch} standardRole={match.StandardRoleName} strategy={match.MatchStrategy} confidence={match.MatchConfidence:0.00} needsReview={match.NeedsReview} details={match.MatchDetails}",
+                cancellationToken);
 
             var standardizedRoleId = match.StandardRoleId;
             var standardizedRoleName = match.StandardRoleName;
@@ -492,7 +779,11 @@ public class CompanyCvController : ControllerBase
 
             if (!string.IsNullOrWhiteSpace(exp.StandardRoleName) && reviewedByUser)
             {
-                var reviewedMatch = await _roleStandardizationService.MatchRoleAsync(exp.StandardRoleName, cancellationToken);
+                var reviewedMatch = await _roleStandardizationService.MatchRoleAsync(exp.StandardRoleName, null, cancellationToken);
+                await _diagnosticsLogger.LogAsync(
+                    "role.match",
+                    $"source=save-reviewed rawRole={rawRole} reviewedRole={exp.StandardRoleName} standardRole={reviewedMatch.StandardRoleName} strategy={reviewedMatch.MatchStrategy} confidence={reviewedMatch.MatchConfidence:0.00} needsReview={reviewedMatch.NeedsReview} details={reviewedMatch.MatchDetails}",
+                    cancellationToken);
                 standardizedRoleId = reviewedMatch.StandardRoleId;
                 standardizedRoleName = reviewedMatch.StandardRoleName;
                 matchConfidence = Math.Max(reviewedMatch.MatchConfidence, 0.99d);
@@ -536,6 +827,14 @@ public class CompanyCvController : ControllerBase
     }
 
     private sealed record StoredFileResult(string AbsolutePath, string StoragePath);
+
+    private static async Task<string> ComputeFileHashAsync(string absolutePath, CancellationToken cancellationToken)
+    {
+        await using var stream = System.IO.File.OpenRead(absolutePath);
+        using var sha256 = SHA256.Create();
+        var hash = await sha256.ComputeHashAsync(stream, cancellationToken);
+        return Convert.ToHexString(hash);
+    }
 
     private sealed class ProfileSnapshot
     {

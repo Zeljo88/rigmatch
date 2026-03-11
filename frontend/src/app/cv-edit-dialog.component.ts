@@ -96,14 +96,59 @@ export type CvEditDialogData = {
         </div>
       </div>
 
+      <div class="review-summary" *ngIf="pendingRoleReviewCount > 0">
+        <strong>{{ pendingRoleReviewCount }}</strong> role {{ pendingRoleReviewCount === 1 ? 'mapping needs' : 'mappings need' }} review.
+        Auto-matched roles stay mapped unless you explicitly change them.
+      </div>
+
       <div class="experience-header">
-        <h3>Experience Entries</h3>
+        <h3>Needs Review</h3>
         <button mat-stroked-button type="button" (click)="addExperience()">Add Experience</button>
       </div>
 
-      <div class="experience-card" *ngFor="let exp of workingProfile.experiences; index as i">
+      <div class="empty-state" *ngIf="reviewExperiences.length === 0">
+        No experience mappings currently need review.
+      </div>
+
+      <div class="experience-card" *ngFor="let exp of reviewExperiences; trackBy: trackByExperienceIndex">
+        <ng-container *ngTemplateOutlet="experienceCard; context: { $implicit: exp.item, index: exp.index }"></ng-container>
+      </div>
+
+      <div class="auto-matched-section" *ngIf="autoMatchedExperiences.length > 0">
+        <div class="experience-header compact">
+          <h3>Auto Matched</h3>
+          <button mat-button type="button" (click)="showAutoMatched = !showAutoMatched">
+            {{ showAutoMatched ? 'Hide' : 'Show' }} {{ autoMatchedExperiences.length }}
+          </button>
+        </div>
+
+        <div class="auto-matched-note">
+          These roles were mapped above the confidence threshold and do not require action unless you want to override them.
+        </div>
+
+        <div *ngIf="showAutoMatched">
+          <div class="experience-card" *ngFor="let exp of autoMatchedExperiences; trackBy: trackByExperienceIndex">
+            <ng-container *ngTemplateOutlet="experienceCard; context: { $implicit: exp.item, index: exp.index }"></ng-container>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #experienceCard let-exp let-i="index">
         <div class="experience-card-head">
-          <strong>Experience {{ i + 1 }}</strong>
+          <div class="experience-title-row">
+            <strong>Experience {{ i + 1 }}</strong>
+            <div class="experience-badges">
+              <span class="status-badge status-unmapped" *ngIf="isUnmapped(exp)">Unmapped</span>
+              <span class="status-badge status-review" *ngIf="!isUnmapped(exp) && requiresReview(exp)">Needs Review</span>
+              <span class="status-badge status-reviewed" *ngIf="exp.reviewedByUser">Reviewed</span>
+              <span class="status-badge status-matched" *ngIf="!isUnmapped(exp) && !requiresReview(exp) && !exp.reviewedByUser">
+                Auto Matched
+                <span class="status-confidence" *ngIf="exp.matchConfidence !== null && exp.matchConfidence !== undefined">
+                  {{ exp.matchConfidence | number:'1.2-2' }}
+                </span>
+              </span>
+            </div>
+          </div>
           <button mat-button color="warn" type="button" (click)="removeExperience(i)">Remove</button>
         </div>
 
@@ -113,14 +158,25 @@ export type CvEditDialogData = {
             <input matInput [name]="'company' + i" [(ngModel)]="exp.companyName" />
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Standard Role</mat-label>
-            <mat-select [name]="'standardRoleName' + i" [(ngModel)]="exp.standardRoleName">
-              <mat-option *ngFor="let roleOption of getRoleOptions(exp.standardRoleName)" [value]="roleOption">
-                {{ roleOption }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <ng-container *ngIf="showRoleEditor(exp); else autoMappedRole">
+            <mat-form-field appearance="outline">
+              <mat-label>Mapped Standard Role</mat-label>
+              <mat-select [name]="'standardRoleName' + i" [(ngModel)]="exp.standardRoleName">
+                <mat-option [value]="''">No standard match</mat-option>
+                <mat-option *ngFor="let roleOption of getRoleOptions(exp.standardRoleName)" [value]="roleOption">
+                  {{ roleOption }}
+                </mat-option>
+              </mat-select>
+              <mat-hint *ngIf="!exp.standardRoleName && exp.rawRoleTitle">No catalog match yet. Choose one if needed.</mat-hint>
+            </mat-form-field>
+          </ng-container>
+          <ng-template #autoMappedRole>
+            <mat-form-field appearance="outline">
+              <mat-label>Mapped Standard Role</mat-label>
+              <input matInput [value]="exp.standardRoleName" readonly />
+              <mat-hint>Auto-matched above threshold.</mat-hint>
+            </mat-form-field>
+          </ng-template>
         </div>
 
         <div class="grid">
@@ -129,9 +185,24 @@ export type CvEditDialogData = {
             <input matInput [name]="'rawRoleTitle' + i" [(ngModel)]="exp.rawRoleTitle" />
           </mat-form-field>
 
-          <mat-checkbox [name]="'reviewedByUser' + i" [(ngModel)]="exp.reviewedByUser">
-            Mark mapping as reviewed
-          </mat-checkbox>
+          <div class="review-actions">
+            <button
+              *ngIf="!showRoleEditor(exp)"
+              mat-flat-button
+              color="warn"
+              class="change-mapping-button"
+              type="button"
+              (click)="enableRoleReview(i)">
+              Change Mapping
+            </button>
+
+            <mat-checkbox
+              *ngIf="showRoleEditor(exp)"
+              [name]="'reviewedByUser' + i"
+              [(ngModel)]="exp.reviewedByUser">
+              Mark mapping as reviewed
+            </mat-checkbox>
+          </div>
         </div>
 
         <div class="grid">
@@ -150,7 +221,7 @@ export type CvEditDialogData = {
           <mat-label>Description</mat-label>
           <textarea matInput rows="3" [name]="'description' + i" [(ngModel)]="exp.description"></textarea>
         </mat-form-field>
-      </div>
+      </ng-template>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
@@ -183,6 +254,10 @@ export type CvEditDialogData = {
       align-items: center;
       justify-content: space-between;
       margin-top: 0.25rem;
+    }
+
+    .experience-header.compact {
+      margin-top: 0;
     }
 
     .role-exp-block {
@@ -251,10 +326,97 @@ export type CvEditDialogData = {
       gap: 0.5rem;
     }
 
+    .auto-matched-section {
+      display: grid;
+      gap: 0.75rem;
+      padding-top: 0.25rem;
+    }
+
+    .auto-matched-note,
+    .empty-state {
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 0.75rem 0.9rem;
+      color: #475569;
+      background: #f8fafc;
+    }
+
+    .review-summary {
+      border: 1px solid #fcd34d;
+      background: #fffbeb;
+      color: #92400e;
+      border-radius: 12px;
+      padding: 0.75rem 0.9rem;
+    }
+
     .experience-card-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .experience-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .experience-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      border-radius: 999px;
+      padding: 0.15rem 0.55rem;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .status-unmapped {
+      background: #fff4e5;
+      color: #9a3412;
+      border: 1px solid #fdba74;
+    }
+
+    .status-review {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+
+    .status-reviewed {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+
+    .status-matched {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+
+    .status-confidence {
+      margin-left: 0.45rem;
+      padding-left: 0.45rem;
+      border-left: 1px solid rgba(22, 101, 52, 0.25);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .review-actions {
+      display: flex;
+      align-items: center;
+      min-height: 56px;
+    }
+
+    .change-mapping-button {
+      box-shadow: none;
     }
 
     .full-width {
@@ -272,6 +434,7 @@ export class CvEditDialogComponent {
   workingProfile: EditableCandidateProfile;
   skillsCsv = '';
   certificationsCsv = '';
+  showAutoMatched = false;
   readonly standardRoles: string[];
 
   constructor(
@@ -313,9 +476,13 @@ export class CvEditDialogComponent {
   }
 
   save(): void {
+    const calculatedExperienceYears = this.calculateTotalExperienceYears(this.workingProfile.experiences);
+
     const cleanedProfile: EditableCandidateProfile = {
       ...this.workingProfile,
-      experienceYears: Number(this.workingProfile.experienceYears) || 0,
+      experienceYears: this.workingProfile.experiences.length > 0
+        ? calculatedExperienceYears
+        : (Number(this.workingProfile.experienceYears) || 0),
       jobTitles: this.extractUniqueFromExperiences('role'),
       companies: this.extractUniqueFromExperiences('companyName'),
       skills: this.parseCsv(this.skillsCsv),
@@ -326,9 +493,10 @@ export class CvEditDialogComponent {
         standardRoleId: exp.standardRoleId ?? null,
         standardRoleName: (exp.standardRoleName ?? '').trim(),
         matchConfidence: exp.matchConfidence ?? null,
-        needsReview: exp.needsReview ?? false,
+        needsReview: !(exp.reviewedByUser ?? false) &&
+          ((exp.needsReview ?? false) || !(exp.standardRoleName ?? '').trim()),
         reviewedByUser: exp.reviewedByUser ?? false,
-        role: (exp.standardRoleName ?? exp.role ?? '').trim(),
+        role: (exp.standardRoleName ?? exp.rawRoleTitle ?? exp.role ?? '').trim(),
         startDate: exp.startDate.trim(),
         endDate: exp.endDate.trim(),
         description: exp.description.trim()
@@ -383,7 +551,7 @@ export class CvEditDialogComponent {
   getCompaniesForRole(role: string): string {
     const key = role.toLowerCase().replace(/\s+/g, ' ').trim();
     const companies = this.workingProfile.experiences
-      .filter(exp => (exp.standardRoleName ?? exp.role ?? '').toLowerCase().replace(/\s+/g, ' ').trim() === key)
+      .filter(exp => (exp.standardRoleName ?? exp.rawRoleTitle ?? exp.role ?? '').toLowerCase().replace(/\s+/g, ' ').trim() === key)
       .map(exp => (exp.companyName ?? '').trim())
       .filter(name => name.length > 0)
       .filter((name, index, all) => all.findIndex(item => item.toLowerCase() === name.toLowerCase()) === index);
@@ -392,51 +560,73 @@ export class CvEditDialogComponent {
   }
 
   getRoleOptions(currentRole: string): string[] {
-    const normalizedCurrentRole = currentRole.trim();
-    if (!normalizedCurrentRole) {
-      return this.standardRoles;
-    }
+    return this.standardRoles;
+  }
 
-    const exists = this.standardRoles.some(role => role.toLowerCase() === normalizedCurrentRole.toLowerCase());
-    if (exists) {
-      return this.standardRoles;
-    }
+  get pendingRoleReviewCount(): number {
+    return this.workingProfile.experiences.filter(exp => this.requiresReview(exp)).length;
+  }
 
-    return [normalizedCurrentRole, ...this.standardRoles];
+  get reviewExperiences(): { item: ExperienceEntry; index: number }[] {
+    return this.workingProfile.experiences
+      .map((item, index) => ({ item, index }))
+      .filter(entry => this.requiresReview(entry.item));
+  }
+
+  get autoMatchedExperiences(): { item: ExperienceEntry; index: number }[] {
+    return this.workingProfile.experiences
+      .map((item, index) => ({ item, index }))
+      .filter(entry => !this.requiresReview(entry.item));
+  }
+
+  showRoleEditor(experience: ExperienceEntry): boolean {
+    return this.requiresReview(experience) || !!experience.reviewedByUser;
+  }
+
+  trackByExperienceIndex(_: number, entry: { index: number }): number {
+    return entry.index;
+  }
+
+  enableRoleReview(index: number): void {
+    const experiences = [...this.workingProfile.experiences];
+    experiences[index] = {
+      ...experiences[index],
+      needsReview: true,
+      reviewedByUser: false
+    };
+
+    this.workingProfile = {
+      ...this.workingProfile,
+      experiences
+    };
+  }
+
+  isUnmapped(experience: ExperienceEntry): boolean {
+    return !(experience.standardRoleName ?? '').trim();
+  }
+
+  requiresReview(experience: ExperienceEntry): boolean {
+    return !experience.reviewedByUser &&
+      ((experience.needsReview ?? false) || this.isUnmapped(experience));
   }
 
   private buildRoleExperience(experiences: ExperienceEntry[]): RoleExperienceEntry[] {
+    const resolvedExperiences = this.resolveExperienceRanges(experiences);
     const buckets = new Map<string, RoleExperienceEntry>();
 
-    for (const experience of experiences) {
-      const role = experience.role?.trim();
-      const standardRole = experience.standardRoleName?.trim() || role;
-      if (!standardRole) {
-        continue;
-      }
-
-      const start = this.tryParseDate(experience.startDate);
-      if (!start) {
-        continue;
-      }
-
-      const end = this.tryParseDate(experience.endDate) ?? new Date();
-      if (end.getTime() < start.getTime()) {
-        continue;
-      }
-
-      const years = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+    for (const experience of resolvedExperiences) {
+      const years = (experience.end.getTime() - experience.start.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
       if (years <= 0.01) {
         continue;
       }
 
-      const key = standardRole.toLowerCase().replace(/\s+/g, ' ').trim();
+      const key = experience.role.toLowerCase().replace(/\s+/g, ' ').trim();
       const existing = buckets.get(key);
 
       if (existing) {
         existing.years += years;
       } else {
-        buckets.set(key, { jobTitle: standardRole, years });
+        buckets.set(key, { jobTitle: experience.role, years });
       }
     }
 
@@ -448,10 +638,80 @@ export class CvEditDialogComponent {
       .sort((a, b) => b.years - a.years || a.jobTitle.localeCompare(b.jobTitle));
   }
 
+  private calculateTotalExperienceYears(experiences: ExperienceEntry[]): number {
+    const resolvedExperiences = this.resolveExperienceRanges(experiences)
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+
+    if (resolvedExperiences.length === 0) {
+      return 0;
+    }
+
+    let totalMs = 0;
+    let currentStart = resolvedExperiences[0].start;
+    let currentEnd = resolvedExperiences[0].end;
+
+    for (const experience of resolvedExperiences.slice(1)) {
+      if (experience.start.getTime() <= currentEnd.getTime()) {
+        if (experience.end.getTime() > currentEnd.getTime()) {
+          currentEnd = experience.end;
+        }
+
+        continue;
+      }
+
+      totalMs += currentEnd.getTime() - currentStart.getTime();
+      currentStart = experience.start;
+      currentEnd = experience.end;
+    }
+
+    totalMs += currentEnd.getTime() - currentStart.getTime();
+    return Math.round((totalMs / (1000 * 60 * 60 * 24 * 365.25)));
+  }
+
+  private resolveExperienceRanges(experiences: ExperienceEntry[]): { role: string; start: Date; end: Date }[] {
+    const drafts = experiences
+      .map(exp => {
+        const role = exp.standardRoleName?.trim() || exp.rawRoleTitle?.trim() || exp.role?.trim() || '';
+        const start = this.tryParseDate(exp.startDate);
+        const end = this.tryParseDate(exp.endDate);
+        const isCurrent = /^(present|current|now)$/i.test((exp.endDate ?? '').trim());
+
+        return { role, start, end, isCurrent };
+      })
+      .filter(item => item.role.length > 0 && !!item.start)
+      .sort((a, b) => a.start!.getTime() - b.start!.getTime());
+
+    const now = new Date();
+    const resolved: { role: string; start: Date; end: Date }[] = [];
+
+    for (let i = 0; i < drafts.length; i++) {
+      const current = drafts[i];
+      const start = current.start!;
+      let end = current.end;
+
+      if (!end) {
+        if (current.isCurrent || i === drafts.length - 1) {
+          end = now;
+        } else {
+          const nextStart = drafts[i + 1].start!;
+          end = nextStart.getTime() > start.getTime() ? nextStart : start;
+        }
+      }
+
+      if (end.getTime() < start.getTime()) {
+        continue;
+      }
+
+      resolved.push({ role: current.role, start, end });
+    }
+
+    return resolved;
+  }
+
   private extractUniqueFromExperiences(field: 'role' | 'companyName'): string[] {
     const values = this.workingProfile.experiences
       .map(exp => field === 'role'
-        ? (exp.standardRoleName ?? exp.role ?? '').trim()
+        ? (exp.standardRoleName ?? exp.rawRoleTitle ?? exp.role ?? '').trim()
         : (exp.companyName ?? '').trim())
       .filter(value => value.length > 0);
 

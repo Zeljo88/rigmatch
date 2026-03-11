@@ -67,6 +67,13 @@ export type CompanyCvUploadResponse = {
   fileUrl: string;
   parsedProfile: ParsedCandidateProfile;
   createdAtUtc: string;
+  duplicateWarnings: CompanyCvDuplicateWarning[];
+};
+
+export type CompanyCvDuplicateWarning = {
+  type: 'exact' | 'probable' | 'possible' | string;
+  message: string;
+  existingCvId: string;
 };
 
 export type CompanyCvListItem = {
