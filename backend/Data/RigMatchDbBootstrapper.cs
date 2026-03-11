@@ -9,6 +9,7 @@ public static class RigMatchDbBootstrapper
     {
         await dbContext.Database.EnsureCreatedAsync(cancellationToken);
         await EnsureCvRecordSchemaAsync(dbContext, cancellationToken);
+        await EnsureCompanyProjectSchemaAsync(dbContext, cancellationToken);
         await EnsureRoleAliasSchemaAsync(dbContext, cancellationToken);
         await EnsureSuggestedRoleAliasSchemaAsync(dbContext, cancellationToken);
         await RoleCatalogSeeder.SeedAsync(dbContext, cancellationToken);
@@ -99,6 +100,38 @@ public static class RigMatchDbBootstrapper
                 "ALTER TABLE RoleAliases ADD COLUMN RequiresReview INTEGER NOT NULL DEFAULT 0;",
                 cancellationToken);
         }
+    }
+
+    private static async Task EnsureCompanyProjectSchemaAsync(RigMatchDbContext dbContext, CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS CompanyProjects (
+                Id TEXT NOT NULL CONSTRAINT PK_CompanyProjects PRIMARY KEY,
+                CompanyId TEXT NOT NULL,
+                Title TEXT NOT NULL,
+                ClientName TEXT NOT NULL,
+                PrimaryRole TEXT NOT NULL,
+                AdditionalRolesJson TEXT NOT NULL,
+                RequiredSkillsJson TEXT NOT NULL,
+                PreferredSkillsJson TEXT NOT NULL,
+                RequiredCertificationsJson TEXT NOT NULL,
+                PreferredCertificationsJson TEXT NOT NULL,
+                MinimumExperienceYears INTEGER NULL,
+                Location TEXT NOT NULL,
+                PreferredEducation TEXT NOT NULL,
+                Description TEXT NOT NULL,
+                Status TEXT NOT NULL,
+                StartDateUtc TEXT NULL,
+                CreatedAtUtc TEXT NOT NULL,
+                UpdatedAtUtc TEXT NULL,
+                FOREIGN KEY (CompanyId) REFERENCES Companies(Id) ON DELETE CASCADE
+            );
+            """, cancellationToken);
+
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            CREATE INDEX IF NOT EXISTS IX_CompanyProjects_CompanyId
+            ON CompanyProjects(CompanyId);
+            """, cancellationToken);
     }
 
     private static async Task EnsureSuggestedRoleAliasSchemaAsync(RigMatchDbContext dbContext, CancellationToken cancellationToken)

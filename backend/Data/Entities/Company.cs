@@ -12,5 +12,7 @@ public class Company
 
     public ICollection<CvRecord> CvRecords { get; set; } = new List<CvRecord>();
 
+    public ICollection<CompanyProject> Projects { get; set; } = new List<CompanyProject>();
+
     public ICollection<SuggestedRoleAlias> SuggestedRoleAliases { get; set; } = new List<SuggestedRoleAlias>();
 }

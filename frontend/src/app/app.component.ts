@@ -17,6 +17,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ConfirmDialogComponent } from './confirm-dialog.component';
 import { CvEditDialogComponent } from './cv-edit-dialog.component';
+import { ProjectsPageComponent } from './projects-page.component';
 import {
   CompanyCvDuplicateWarning,
   CompanyCvDetailResponse,
@@ -29,7 +30,8 @@ import {
   RoleExperienceEntry
 } from './cv-types';
 
-type Page = 'upload' | 'library' | 'settings' | 'candidateDetail';
+type Page = 'upload' | 'library' | 'projects' | 'settings' | 'candidateDetail';
+type CandidateReturnPage = 'library' | 'projects';
 
 @Component({
   selector: 'app-root',
@@ -49,7 +51,8 @@ type Page = 'upload' | 'library' | 'settings' | 'candidateDetail';
     MatDialogModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    ProjectsPageComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -67,6 +70,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @ViewChild(MatSort) sort?: MatSort;
 
   activePage: Page = 'upload';
+  candidateDetailReturnPage: CandidateReturnPage = 'library';
 
   selectedFile: File | null = null;
   isUploading = false;
@@ -230,14 +234,23 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   viewCv(item: CompanyCvListItem): void {
+    this.openCandidateDetail(item.id, this.activePage === 'projects' ? 'projects' : 'library');
+  }
+
+  openCandidateFromProject(cvId: string): void {
+    this.openCandidateDetail(cvId, 'projects');
+  }
+
+  private openCandidateDetail(cvId: string, returnPage: CandidateReturnPage): void {
     this.isBusyAction = true;
     this.http
-      .get<CompanyCvDetailResponse>(`${this.apiBaseUrl}/company/cvs/${item.id}`, {
+      .get<CompanyCvDetailResponse>(`${this.apiBaseUrl}/company/cvs/${cvId}`, {
         headers: { 'X-Company-Id': this.companyId }
       })
       .subscribe({
         next: (response) => {
           this.isBusyAction = false;
+          this.candidateDetailReturnPage = returnPage;
           this.selectedCvDetail = {
             id: response.id,
             fileUrl: response.fileUrl,
@@ -322,11 +335,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   closeDetail(): void {
     this.selectedCvDetail = null;
-    this.setPage('library');
+    this.setPage(this.candidateDetailReturnPage);
   }
 
   backToLibrary(): void {
-    this.setPage('library');
+    this.setPage(this.candidateDetailReturnPage);
+  }
+
+  get candidateDetailBackLabel(): string {
+    return this.candidateDetailReturnPage === 'projects' ? 'Back to Projects' : 'Back to Library';
   }
 
   private openEditDialog(

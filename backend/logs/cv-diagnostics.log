@@ -315,3 +315,34 @@
 2026-03-11T13:17:03.1668140+00:00 [role.match] source=save-reviewed rawRole=Senior Workover Engineer reviewedRole=Well Intervention Engineer standardRole=Well Intervention Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
 2026-03-11T13:17:03.1698186+00:00 [role.match] source=save rawRole=Senior Drilling Engineer inputRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
 2026-03-11T13:17:03.1729241+00:00 [role.match] source=save rawRole=Senior Drilling Engineer inputRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:23:13.1337590+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV02_Aisha_Farouq_Exact_Clean.pdf fileSize=3305 fileHash=C1A8D7471D8D393399040DED76D8D263D28D05CD727E8FB86F82F90251218310
+2026-03-11T15:23:14.3045012+00:00 [upload.extracted] fileHash=C1A8D7471D8D393399040DED76D8D263D28D05CD727E8FB86F82F90251218310 extractedChars=1701
+2026-03-11T15:23:14.5420698+00:00 [parser.prepare] rawChars=1701 preparedChars=1701 referenceChars=360 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-11T15:23:14.5446936+00:00 [parser.request] attempt=1 preparedChars=1701 maxTokens=1000
+2026-03-11T15:23:20.0033756+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-11T15:23:20.0788371+00:00 [role.match] source=parse rawRole=Reservoir Engineer standardRole=Reservoir Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:23:20.0911854+00:00 [role.match] source=parse rawRole=Reservoir Engineer standardRole=Reservoir Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:23:20.0938052+00:00 [role.match] source=parse rawRole=Subsurface Engineer standardRole=Subsurface Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:23:20.1056019+00:00 [role.match] source=parse rawRole=Junior Petroleum standardRole= strategy=unmatched confidence=0.45 needsReview=True details=no alias/heuristic/context winner
+2026-03-11T15:23:20.2941607+00:00 [upload.completed] recordId=ff57e216-3627-4d71-abde-82094b916abc fileHash=C1A8D7471D8D393399040DED76D8D263D28D05CD727E8FB86F82F90251218310 warningCount=0
+2026-03-11T15:23:37.8114956+00:00 [role.match] source=save rawRole=Reservoir Engineer inputRole=Reservoir Engineer standardRole=Reservoir Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:23:37.8147435+00:00 [role.match] source=save rawRole=Reservoir Engineer inputRole=Reservoir Engineer standardRole=Reservoir Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:23:37.8166885+00:00 [role.match] source=save rawRole=Subsurface Engineer inputRole=Subsurface Engineer standardRole=Subsurface Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:23:37.8187261+00:00 [role.match] source=save rawRole=Junior Petroleum inputRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:23:37.8203354+00:00 [role.match] source=save-reviewed rawRole=Junior Petroleum reviewedRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:23:53.2608549+00:00 [upload.received] companyId=c4e713d1-b427-4dfc-bb65-2146f99c94ab fileName=CV04_Leila_Mercer_Alias_Clean.pdf fileSize=3020 fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7
+2026-03-11T15:23:53.2750762+00:00 [upload.extracted] fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7 extractedChars=1295
+2026-03-11T15:23:53.2863733+00:00 [parser.prepare] rawChars=1295 preparedChars=1295 referenceChars=425 maxTextChars=12000 maxCompletionTokens=1000
+2026-03-11T15:23:53.2876931+00:00 [parser.request] attempt=1 preparedChars=1295 maxTokens=1000
+2026-03-11T15:23:58.2448768+00:00 [parser.response] attempt=1 statusCode=200 success=true
+2026-03-11T15:23:58.2490005+00:00 [role.match] source=parse rawRole=Drilling & Wells Engineer standardRole=Drilling Engineer strategy=heuristic confidence=0.78 needsReview=True details=normalizedRole=drilling & wells engineer
+2026-03-11T15:23:58.2522753+00:00 [role.match] source=parse rawRole=Wells Engineer standardRole=Well Engineer strategy=alias confidence=0.95 needsReview=False details=alias=Wells Engineer
+2026-03-11T15:23:58.2546945+00:00 [role.match] source=parse rawRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:23:58.2573067+00:00 [role.match] source=parse rawRole=Petroleum Engineer Intern standardRole=Petroleum Engineer strategy=soft-alias confidence=0.78 needsReview=True details=alias=Petroleum Engineer Intern
+2026-03-11T15:23:58.2685257+00:00 [upload.completed] recordId=4ae2cd07-7791-467a-958a-d46c72f63867 fileHash=F8213B34609CBF69146D7A2CB515B50799EE5A52634675325E27D830BA2E3EA7 warningCount=0
+2026-03-11T15:24:05.1306222+00:00 [role.match] source=save rawRole=Drilling & Wells Engineer inputRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:24:05.1335470+00:00 [role.match] source=save-reviewed rawRole=Drilling & Wells Engineer reviewedRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:24:05.1369695+00:00 [role.match] source=save rawRole=Wells Engineer inputRole=Well Engineer standardRole=Well Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:24:05.1415533+00:00 [role.match] source=save rawRole=Drilling Engineer inputRole=Drilling Engineer standardRole=Drilling Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:24:05.1447669+00:00 [role.match] source=save rawRole=Petroleum Engineer Intern inputRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name
+2026-03-11T15:24:05.1474496+00:00 [role.match] source=save-reviewed rawRole=Petroleum Engineer Intern reviewedRole=Petroleum Engineer standardRole=Petroleum Engineer strategy=direct confidence=0.94 needsReview=False details=matched standard role name

@@ -13,6 +13,8 @@ public class RigMatchDbContext : DbContext
 
     public DbSet<CvRecord> CvRecords => Set<CvRecord>();
 
+    public DbSet<CompanyProject> CompanyProjects => Set<CompanyProject>();
+
     public DbSet<StandardRole> StandardRoles => Set<StandardRole>();
 
     public DbSet<RoleAlias> RoleAliases => Set<RoleAlias>();
@@ -48,6 +50,39 @@ public class RigMatchDbContext : DbContext
             .HasOne(c => c.Company)
             .WithMany(c => c.CvRecords)
             .HasForeignKey(c => c.CompanyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.Title)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.ClientName)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.PrimaryRole)
+            .HasMaxLength(150);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.Location)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.PreferredEducation)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.Status)
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<CompanyProject>()
+            .HasIndex(project => project.CompanyId);
+
+        modelBuilder.Entity<CompanyProject>()
+            .HasOne(project => project.Company)
+            .WithMany(company => company.Projects)
+            .HasForeignKey(project => project.CompanyId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<StandardRole>()

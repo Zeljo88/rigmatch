@@ -105,3 +105,71 @@ export type CompanyCvDetailView = {
   downloadUrl: string;
   structuredProfile: CompanyCvStructuredProfile;
 };
+
+export type CompanyProjectListItem = {
+  id: string;
+  title: string;
+  primaryRole: string;
+  location: string;
+  status: string;
+  createdAtUtc: string;
+  updatedAtUtc: string | null;
+};
+
+export type CompanyProjectCandidateMatch = {
+  cvId: string;
+  candidateName: string;
+  currentRole: string;
+  experienceYears: number;
+  matchScore: number;
+  roleMatchType: string;
+  matchedRequiredCertifications: string[];
+  missingRequiredCertifications: string[];
+  matchedPreferredCertifications: string[];
+  matchedRequiredSkills: string[];
+  missingRequiredSkills: string[];
+  matchedPreferredSkills: string[];
+  meetsMinimumExperience: boolean;
+  locationMatched: boolean;
+  educationMatched: boolean;
+  summaryPoints: string[];
+};
+
+export type CompanyProjectDetailResponse = {
+  id: string;
+  title: string;
+  clientName: string;
+  primaryRole: string;
+  additionalRoles: string[];
+  requiredSkills: string[];
+  preferredSkills: string[];
+  requiredCertifications: string[];
+  preferredCertifications: string[];
+  minimumExperienceYears: number | null;
+  location: string;
+  preferredEducation: string;
+  description: string;
+  status: string;
+  startDateUtc: string | null;
+  createdAtUtc: string;
+  updatedAtUtc: string | null;
+  candidateMatches: CompanyProjectCandidateMatch[];
+};
+
+export type EditableCompanyProjectForm = {
+  id: string | null;
+  title: string;
+  clientName: string;
+  primaryRole: string;
+  additionalRoles: string[];
+  requiredSkillsText: string;
+  preferredSkillsText: string;
+  requiredCertificationsText: string;
+  preferredCertificationsText: string;
+  minimumExperienceYears: number | null;
+  location: string;
+  preferredEducation: string;
+  description: string;
+  status: string;
+  startDate: string;
+};

@@ -1,0 +1,142 @@
+:host {
+  display: block;
+}
+
+.projects-shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.page-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.table-card,
+.projects-header-card,
+.detail-card,
+.filters-card,
+.match-card {
+  overflow: hidden;
+}
+
+.project-table {
+  width: 100%;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.loading-wrap {
+  display: grid;
+  place-items: center;
+  padding: 1rem 0;
+}
+
+.empty-table,
+.project-description {
+  margin: 0;
+  color: #475569;
+}
+
+.form-grid,
+.detail-grid,
+.requirements-grid,
+.match-filter-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-grid-wide,
+.requirements-grid {
+  margin-top: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 0.75rem;
+}
+
+.match-filter-grid {
+  grid-template-columns: minmax(0, 220px) auto auto;
+  align-items: center;
+}
+
+.full-width {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.match-card-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.match-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.match-badge,
+.match-meta-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 0.9rem;
+}
+
+.match-badge {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.match-flag-ok {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.summary-list {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.summary-list p {
+  margin: 0;
+  color: #334155;
+}
+
+.requirements-grid h4 {
+  margin: 0 0 0.35rem;
+}
+
+.requirements-grid ul {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+@media (max-width: 900px) {
+  .form-grid,
+  .form-grid-wide,
+  .detail-grid,
+  .requirements-grid,
+  .match-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
