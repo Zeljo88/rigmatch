@@ -1,4 +1,9 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using RigMatch.Api.Data.Entities;
 using RigMatch.Api.Data;
 using RigMatch.Api.Services;
 
@@ -12,12 +17,32 @@ builder.Services.AddDbContext<RigMatchDbContext>(options =>
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=rigmatch.db";
     options.UseSqlite(connectionString);
 });
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+builder.Services.AddAuthorization();
 builder.Services.AddSingleton<ICvDiagnosticsLogger, FileCvDiagnosticsLogger>();
 builder.Services.AddSingleton<ICvParsingGate, CvParsingGate>();
+builder.Services.AddScoped<IPasswordHasher<EmployerUser>, PasswordHasher<EmployerUser>>();
 builder.Services.AddScoped<ICvTextExtractionService, CvTextExtractionService>();
 builder.Services.AddScoped<IRoleStandardizationService, RoleStandardizationService>();
 builder.Services.AddScoped<IParsingReferenceService, ParsingReferenceService>();
 builder.Services.AddScoped<IProjectMatchingService, ProjectMatchingService>();
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddHttpClient<ICvParsingService, CvParsingService>();
 builder.Services.Configure<CvParsingOptions>(builder.Configuration.GetSection("CvParsing"));
 const string FrontendCorsPolicy = "FrontendDevPolicy";
@@ -48,6 +73,7 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseCors(FrontendCorsPolicy);
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

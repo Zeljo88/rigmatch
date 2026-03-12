@@ -8,7 +8,7 @@ Generated: 2026-03-11T13:20:00+01:00
 
 ## 1. Project Overview
 
-**Goal:** Add employer project management and structured candidate matching to RigMatch on top of the existing company CV library and standardized candidate profiles.
+**Goal:** Add employer authentication to RigMatch so CVs and projects belong to authenticated employer users and their company instead of the development-only `X-Company-Id` header.
 
 **Path:** Add Components
 
@@ -54,6 +54,7 @@ Generated: 2026-03-11T13:20:00+01:00
 |-----------|---------------|-----|
 | CV parsing | Azure OpenAI | Existing S0 deployment |
 | Employer projects | Existing API and frontend | Existing local app components |
+| Employer authentication | Existing API and frontend | JWT auth on top of .NET API and Angular app |
 
 ### Supporting Services
 
@@ -61,6 +62,7 @@ Generated: 2026-03-11T13:20:00+01:00
 |---------|---------|
 | SQLite | Development persistence |
 | Azure OpenAI | CV parsing and extraction |
+| JWT auth | Employer login/session enforcement |
 
 ---
 
@@ -76,9 +78,11 @@ Generated: 2026-03-11T13:20:00+01:00
 - [x] **User approved this plan**
 
 ### Phase 2: Execution
-- [x] Add project persistence and schemas
-- [x] Add project CRUD and matching API
-- [x] Add project library, form, and detail UI
+- [x] Add employer user persistence and auth configuration
+- [x] Add register/login/me API and JWT issuance
+- [x] Secure CV/project endpoints to use authenticated company context
+- [x] Add frontend login/register/session flow
+- [x] Remove dependency on `X-Company-Id` in normal app flow
 - [x] Update plan status to "Ready for Validation"
 
 ### Phase 3: Validation
@@ -108,17 +112,18 @@ Generated: 2026-03-11T13:20:00+01:00
 | File | Purpose | Status |
 |------|---------|--------|
 | `.azure/plan.md` | Feature plan | ✅ |
-| `backend/Data/Entities/CompanyProject.cs` | Project persistence | ✅ |
-| `backend/Controllers/CompanyProjectsController.cs` | Employer project API | ✅ |
-| `backend/Services/ProjectMatchingService.cs` | Candidate matching | ✅ |
-| `frontend/src/app/*` | Employer project UI | ✅ |
+| `.azure/plan.md` | Feature plan | ✅ |
+| `backend/Data/Entities/EmployerUser.cs` | Employer auth persistence | ✅ |
+| `backend/Controllers/AuthController.cs` | Auth API | ✅ |
+| `backend/Services/*` | JWT/session/auth helpers | ✅ |
+| `frontend/src/app/*` | Login/register/session UI | ✅ |
 
 ---
 
 ## 9. Next Steps
 
-> Current: Execution
+> Current: Validation
 
-1. Add backend project entity, bootstrap schema, and matching service.
-2. Add frontend project create/library/detail screens inside the existing app shell.
-3. Build backend and frontend and record validation proof.
+1. Restart backend so the new auth schema and JWT middleware are active.
+2. Register the first employer account in the frontend and test login, CV library, and projects.
+3. Replace the development signing key before any shared deployment.

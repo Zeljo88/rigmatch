@@ -48,7 +48,6 @@ export class ProjectsPageComponent implements OnChanges {
   private readonly snackBar = inject(MatSnackBar);
 
   @Input({ required: true }) apiBaseUrl = '';
-  @Input({ required: true }) companyId = '';
   @Input() active = false;
 
   @Output() requestCandidateView = new EventEmitter<string>();
@@ -89,9 +88,7 @@ export class ProjectsPageComponent implements OnChanges {
 
     this.isLoadingProjects = true;
     this.http
-      .get<CompanyProjectListItem[]>(`${this.apiBaseUrl}/company/projects`, {
-        headers: { 'X-Company-Id': this.companyId }
-      })
+      .get<CompanyProjectListItem[]>(`${this.apiBaseUrl}/company/projects`)
       .subscribe({
         next: response => {
           this.projectList = response;
@@ -115,9 +112,7 @@ export class ProjectsPageComponent implements OnChanges {
     this.isBusyAction = true;
     this.ensureStandardRolesLoaded();
     this.http
-      .get<CompanyProjectDetailResponse>(`${this.apiBaseUrl}/company/projects/${item.id}`, {
-        headers: { 'X-Company-Id': this.companyId }
-      })
+      .get<CompanyProjectDetailResponse>(`${this.apiBaseUrl}/company/projects/${item.id}`)
       .subscribe({
         next: response => {
           this.isBusyAction = false;
@@ -141,12 +136,8 @@ export class ProjectsPageComponent implements OnChanges {
     this.isSavingProject = true;
     const payload = this.toProjectPayload(this.projectForm);
     const request = this.projectForm.id
-      ? this.http.put<CompanyProjectDetailResponse>(`${this.apiBaseUrl}/company/projects/${this.projectForm.id}`, payload, {
-          headers: { 'X-Company-Id': this.companyId }
-        })
-      : this.http.post<CompanyProjectDetailResponse>(`${this.apiBaseUrl}/company/projects`, payload, {
-          headers: { 'X-Company-Id': this.companyId }
-        });
+      ? this.http.put<CompanyProjectDetailResponse>(`${this.apiBaseUrl}/company/projects/${this.projectForm.id}`, payload)
+      : this.http.post<CompanyProjectDetailResponse>(`${this.apiBaseUrl}/company/projects`, payload);
 
     request.subscribe({
       next: response => {
@@ -168,9 +159,7 @@ export class ProjectsPageComponent implements OnChanges {
   viewProject(item: CompanyProjectListItem): void {
     this.isBusyAction = true;
     this.http
-      .get<CompanyProjectDetailResponse>(`${this.apiBaseUrl}/company/projects/${item.id}`, {
-        headers: { 'X-Company-Id': this.companyId }
-      })
+      .get<CompanyProjectDetailResponse>(`${this.apiBaseUrl}/company/projects/${item.id}`)
       .subscribe({
         next: response => {
           this.isBusyAction = false;
@@ -205,9 +194,7 @@ export class ProjectsPageComponent implements OnChanges {
 
       this.isBusyAction = true;
       this.http
-        .delete(`${this.apiBaseUrl}/company/projects/${item.id}`, {
-          headers: { 'X-Company-Id': this.companyId }
-        })
+        .delete(`${this.apiBaseUrl}/company/projects/${item.id}`)
         .subscribe({
           next: () => {
             this.isBusyAction = false;
@@ -280,9 +267,7 @@ export class ProjectsPageComponent implements OnChanges {
     }
 
     this.http
-      .get<string[]>(`${this.apiBaseUrl}/company/roles/standard`, {
-        headers: { 'X-Company-Id': this.companyId }
-      })
+      .get<string[]>(`${this.apiBaseUrl}/company/roles/standard`)
       .subscribe({
         next: roles => {
           this.standardRoles = roles;

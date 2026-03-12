@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RigMatch.Api.Data;
@@ -8,12 +10,11 @@ using RigMatch.Api.Services;
 
 namespace RigMatch.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("company")]
 public class CompanyProjectsController : ControllerBase
 {
-    private const string CompanyHeaderName = "X-Company-Id";
-    private const string DefaultCompanyId = "rigmatch-demo-company";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly RigMatchDbContext _dbContext;
@@ -30,7 +31,11 @@ public class CompanyProjectsController : ControllerBase
     [HttpGet("projects")]
     public async Task<ActionResult<IReadOnlyList<CompanyProjectListItem>>> ListProjects(CancellationToken cancellationToken)
     {
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
         var projects = await _dbContext.CompanyProjects
             .Where(project => project.CompanyId == company.Id)
             .ToListAsync(cancellationToken);
@@ -66,7 +71,11 @@ public class CompanyProjectsController : ControllerBase
             return validationError;
         }
 
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
         var project = BuildProjectEntity(request, company.Id);
         project.Id = Guid.NewGuid();
         project.CreatedAtUtc = DateTimeOffset.UtcNow;
@@ -95,7 +104,11 @@ public class CompanyProjectsController : ControllerBase
             return validationError;
         }
 
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
         var project = await _dbContext.CompanyProjects
             .FirstOrDefaultAsync(item => item.Id == id && item.CompanyId == company.Id, cancellationToken);
 
@@ -116,7 +129,11 @@ public class CompanyProjectsController : ControllerBase
         [FromRoute] Guid id,
         CancellationToken cancellationToken)
     {
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
         var project = await _dbContext.CompanyProjects
             .FirstOrDefaultAsync(item => item.Id == id && item.CompanyId == company.Id, cancellationToken);
 
@@ -135,7 +152,11 @@ public class CompanyProjectsController : ControllerBase
         [FromRoute] Guid id,
         CancellationToken cancellationToken)
     {
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
         var project = await _dbContext.CompanyProjects
             .FirstOrDefaultAsync(item => item.Id == id && item.CompanyId == company.Id, cancellationToken);
 
@@ -227,38 +248,16 @@ public class CompanyProjectsController : ControllerBase
         return null;
     }
 
-    private async Task<Company> GetOrCreateCompanyAsync(CancellationToken cancellationToken)
+    private async Task<Company?> GetAuthenticatedCompanyAsync(CancellationToken cancellationToken)
     {
-        var externalId = Request.Headers[CompanyHeaderName].FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(externalId))
+        var companyIdClaim = User.FindFirstValue("companyId");
+        if (!Guid.TryParse(companyIdClaim, out var companyId))
         {
-            externalId = Request.Query["companyId"].FirstOrDefault();
+            return null;
         }
 
-        if (string.IsNullOrWhiteSpace(externalId))
-        {
-            externalId = DefaultCompanyId;
-        }
-
-        var company = await _dbContext.Companies
-            .FirstOrDefaultAsync(c => c.ExternalId == externalId, cancellationToken);
-
-        if (company is not null)
-        {
-            return company;
-        }
-
-        company = new Company
-        {
-            Id = Guid.NewGuid(),
-            ExternalId = externalId,
-            Name = externalId,
-            CreatedAtUtc = DateTimeOffset.UtcNow
-        };
-
-        _dbContext.Companies.Add(company);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return company;
+        return await _dbContext.Companies
+            .FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
     }
 
     private static string SerializeList(IEnumerable<string>? values)

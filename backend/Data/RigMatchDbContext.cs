@@ -11,6 +11,8 @@ public class RigMatchDbContext : DbContext
 
     public DbSet<Company> Companies => Set<Company>();
 
+    public DbSet<EmployerUser> EmployerUsers => Set<EmployerUser>();
+
     public DbSet<CvRecord> CvRecords => Set<CvRecord>();
 
     public DbSet<CompanyProject> CompanyProjects => Set<CompanyProject>();
@@ -34,6 +36,28 @@ public class RigMatchDbContext : DbContext
         modelBuilder.Entity<Company>()
             .Property(c => c.Name)
             .HasMaxLength(200);
+
+        modelBuilder.Entity<EmployerUser>()
+            .HasIndex(user => user.EmailNormalized)
+            .IsUnique();
+
+        modelBuilder.Entity<EmployerUser>()
+            .Property(user => user.FullName)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<EmployerUser>()
+            .Property(user => user.Email)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<EmployerUser>()
+            .Property(user => user.EmailNormalized)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<EmployerUser>()
+            .HasOne(user => user.Company)
+            .WithMany(company => company.Users)
+            .HasForeignKey(user => user.CompanyId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<CvRecord>()
             .Property(c => c.FileUrl)

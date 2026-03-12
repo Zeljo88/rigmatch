@@ -173,3 +173,21 @@ export type EditableCompanyProjectForm = {
   status: string;
   startDate: string;
 };
+
+export type AuthResponse = {
+  token: string;
+  expiresAtUtc: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  companyId: string;
+  companyName: string;
+};
+
+export type CurrentEmployerResponse = {
+  userId: string;
+  fullName: string;
+  email: string;
+  companyId: string;
+  companyName: string;
+};

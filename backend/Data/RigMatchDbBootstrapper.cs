@@ -8,11 +8,34 @@ public static class RigMatchDbBootstrapper
     public static async Task InitializeAsync(RigMatchDbContext dbContext, CancellationToken cancellationToken = default)
     {
         await dbContext.Database.EnsureCreatedAsync(cancellationToken);
+        await EnsureEmployerUserSchemaAsync(dbContext, cancellationToken);
         await EnsureCvRecordSchemaAsync(dbContext, cancellationToken);
         await EnsureCompanyProjectSchemaAsync(dbContext, cancellationToken);
         await EnsureRoleAliasSchemaAsync(dbContext, cancellationToken);
         await EnsureSuggestedRoleAliasSchemaAsync(dbContext, cancellationToken);
         await RoleCatalogSeeder.SeedAsync(dbContext, cancellationToken);
+    }
+
+    private static async Task EnsureEmployerUserSchemaAsync(RigMatchDbContext dbContext, CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS EmployerUsers (
+                Id TEXT NOT NULL CONSTRAINT PK_EmployerUsers PRIMARY KEY,
+                CompanyId TEXT NOT NULL,
+                FullName TEXT NOT NULL,
+                Email TEXT NOT NULL,
+                EmailNormalized TEXT NOT NULL,
+                PasswordHash TEXT NOT NULL,
+                CreatedAtUtc TEXT NOT NULL,
+                LastLoginAtUtc TEXT NULL,
+                FOREIGN KEY (CompanyId) REFERENCES Companies(Id) ON DELETE CASCADE
+            );
+            """, cancellationToken);
+
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_EmployerUsers_EmailNormalized
+            ON EmployerUsers(EmailNormalized);
+            """, cancellationToken);
     }
 
     private static async Task EnsureCvRecordSchemaAsync(RigMatchDbContext dbContext, CancellationToken cancellationToken)

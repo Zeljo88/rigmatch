@@ -38,6 +38,11 @@
   letter-spacing: 0.03em;
 }
 
+.toolbar-meta {
+  font-size: 0.95rem;
+  opacity: 0.92;
+}
+
 .spacer {
   flex: 1 1 auto;
 }
@@ -99,6 +104,15 @@
   display: grid;
   place-items: center;
   padding: 1rem 0;
+}
+
+.auth-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at top right, #ffe7c8 0%, transparent 48%),
+    linear-gradient(140deg, #edf6ff 0%, #f8fff2 100%);
 }
 
 .empty-table {

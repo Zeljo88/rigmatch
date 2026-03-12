@@ -1,0 +1,43 @@
+<main class="auth-shell">
+  <mat-card class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Employer Access</mat-card-title>
+      <mat-card-subtitle>Use a company account to manage CVs and projects securely.</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="mode-switch">
+        <button mat-stroked-button type="button" [disabled]="mode === 'login'" (click)="setMode('login')">Login</button>
+        <button mat-stroked-button type="button" [disabled]="mode === 'register'" (click)="setMode('register')">Register</button>
+      </div>
+
+      <div class="auth-grid">
+        <mat-form-field appearance="outline" *ngIf="mode === 'register'">
+          <mat-label>Company name</mat-label>
+          <input matInput [(ngModel)]="companyName" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" *ngIf="mode === 'register'">
+          <mat-label>Full name</mat-label>
+          <input matInput [(ngModel)]="fullName" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" [(ngModel)]="email" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" [(ngModel)]="password" />
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Working...' : (mode === 'register' ? 'Create account' : 'Login') }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</main>

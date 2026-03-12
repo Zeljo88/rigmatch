@@ -10,6 +10,8 @@ public class Company
 
     public DateTimeOffset CreatedAtUtc { get; set; }
 
+    public ICollection<EmployerUser> Users { get; set; } = new List<EmployerUser>();
+
     public ICollection<CvRecord> CvRecords { get; set; } = new List<CvRecord>();
 
     public ICollection<CompanyProject> Projects { get; set; } = new List<CompanyProject>();
