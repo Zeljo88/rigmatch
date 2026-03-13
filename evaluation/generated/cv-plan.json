@@ -1,0 +1,142 @@
+[
+  {
+    "id": "CV01",
+    "type": "clean_pdf_midlevel_production_operator",
+    "language": "en",
+    "quality": "clean",
+    "focus": ["exact role match", "clear chronology", "clean certifications"]
+  },
+  {
+    "id": "CV02",
+    "type": "clean_pdf_senior_drilling_supervisor",
+    "language": "en",
+    "quality": "clean",
+    "focus": ["long senior career", "multiple offshore assignments", "leadership titles"]
+  },
+  {
+    "id": "CV03",
+    "type": "messy_two_column_hse_advisor",
+    "language": "en",
+    "quality": "messy-format",
+    "focus": ["two-column ordering", "sidebar skills", "date extraction"]
+  },
+  {
+    "id": "CV04",
+    "type": "multilingual_ar_en_wellsite_engineer",
+    "language": "ar-en",
+    "quality": "mixed-language",
+    "focus": ["multilingual parsing", "Arabic + English", "well engineering terminology"]
+  },
+  {
+    "id": "CV05",
+    "type": "multilingual_fr_en_geologist",
+    "language": "fr-en",
+    "quality": "mixed-language",
+    "focus": ["bilingual education", "French certifications", "subsurface domain terms"]
+  },
+  {
+    "id": "CV06",
+    "type": "short_cv_roustabout",
+    "language": "en",
+    "quality": "short",
+    "focus": ["very sparse content", "minimal education", "entry-level history"]
+  },
+  {
+    "id": "CV07",
+    "type": "short_cv_floorhand_with_gaps",
+    "language": "en",
+    "quality": "short-messy",
+    "focus": ["employment gaps", "partial dates", "limited contact info"]
+  },
+  {
+    "id": "CV08",
+    "type": "long_senior_reservoir_engineer",
+    "language": "en",
+    "quality": "long-senior",
+    "focus": ["20+ years", "many projects", "older early-career roles truncated risk"]
+  },
+  {
+    "id": "CV09",
+    "type": "long_senior_operations_manager",
+    "language": "en",
+    "quality": "long-senior",
+    "focus": ["management-heavy CV", "large role progression", "current vs longest-held role"]
+  },
+  {
+    "id": "CV10",
+    "type": "unusual_title_hydrocarbon_allocation_ninja",
+    "language": "en",
+    "quality": "unusual-title",
+    "focus": ["nonstandard title", "normalization challenge", "role catalog mismatch"]
+  },
+  {
+    "id": "CV11",
+    "type": "unusual_title_integrity_champion",
+    "language": "en",
+    "quality": "unusual-title",
+    "focus": ["soft alias handling", "integrity engineering domain"]
+  },
+  {
+    "id": "CV12",
+    "type": "clean_pdf_marine_offshore_mechanic",
+    "language": "en",
+    "quality": "clean",
+    "focus": ["mechanical maintenance", "offshore certs", "trade qualifications"]
+  },
+  {
+    "id": "CV13",
+    "type": "table_heavy_planner_scheduler",
+    "language": "en",
+    "quality": "table-heavy",
+    "focus": ["tables in PDF", "skills matrix", "work-history alignment"]
+  },
+  {
+    "id": "CV14",
+    "type": "scanned_style_field_service_specialist",
+    "language": "en",
+    "quality": "ocr-like",
+    "focus": ["poor extraction", "broken line order", "contact field noise"]
+  },
+  {
+    "id": "CV15",
+    "type": "consultant_multi_short_contracts_subsea_engineer",
+    "language": "en",
+    "quality": "many-short-roles",
+    "focus": ["many contracts", "overlapping dates", "duplicate employer names"]
+  },
+  {
+    "id": "CV16",
+    "type": "clean_pdf_petroleum_engineer_with_relocation_notes",
+    "language": "en",
+    "quality": "clean",
+    "focus": ["location ambiguity", "remote/rotation preferences", "mobility notes"]
+  },
+  {
+    "id": "CV17",
+    "type": "messy_cv_electrical_technician_all_caps",
+    "language": "en",
+    "quality": "format-noisy",
+    "focus": ["ALL CAPS", "inconsistent punctuation", "keyword extraction"]
+  },
+  {
+    "id": "CV18",
+    "type": "mixed_quality_procurement_specialist_oil_gas",
+    "language": "en",
+    "quality": "domain-adjacent",
+    "focus": ["adjacent non-core role", "matching eligibility", "role-family decisions"]
+  },
+  {
+    "id": "CV19",
+    "type": "bilingual_es_en_pipeline_inspector",
+    "language": "es-en",
+    "quality": "mixed-language",
+    "focus": ["Spanish + English", "inspection certs", "field abbreviations"]
+  },
+  {
+    "id": "CV20",
+    "type": "senior_production_operator_variant_titles",
+    "language": "en",
+    "quality": "normalization-regression",
+    "focus": ["Production Operator variants", "senior/operator-family regression coverage"]
+  }
+]

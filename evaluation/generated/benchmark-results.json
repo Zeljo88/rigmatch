@@ -1,0 +1,2398 @@
+{
+  "total_cvs": 20,
+  "failure_categories": {
+    "schema-and-review-flow": 20,
+    "experience-extraction": 9,
+    "certification-normalization": 3,
+    "skills-normalization": 3,
+    "validation-and-review-thresholds": 3,
+    "role-normalization": 1,
+    "text-extraction-and-header-parsing": 1
+  },
+  "category_examples": {
+    "schema-and-review-flow": [
+      {
+        "cv_id": "CV01",
+        "field": "location",
+        "cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+        "fix": "Add location extraction + normalized location model + review/edit support"
+      },
+      {
+        "cv_id": "CV02",
+        "field": "location",
+        "cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+        "fix": "Add location extraction + normalized location model + review/edit support"
+      },
+      {
+        "cv_id": "CV03",
+        "field": "location",
+        "cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+        "fix": "Add location extraction + normalized location model + review/edit support"
+      }
+    ],
+    "certification-normalization": [
+      {
+        "cv_id": "CV01",
+        "field": "certifications",
+        "cause": "Parser/normalizer missed a field that should be straightforward",
+        "fix": "Normalize certifications using alias dictionaries (for example OPITO FOET vs FOET) and structured splitting rules."
+      },
+      {
+        "cv_id": "CV13",
+        "field": "certifications",
+        "cause": "Table-heavy formatting likely reduced extraction fidelity",
+        "fix": "Normalize certifications using alias dictionaries (for example OPITO FOET vs FOET) and structured splitting rules."
+      },
+      {
+        "cv_id": "CV17",
+        "field": "certifications",
+        "cause": "All-caps noisy formatting weakened normalization and token quality",
+        "fix": "Normalize certifications using alias dictionaries (for example OPITO FOET vs FOET) and structured splitting rules."
+      }
+    ],
+    "experience-extraction": [
+      {
+        "cv_id": "CV02",
+        "field": "jobTitles",
+        "cause": "Parser/normalizer missed a field that should be straightforward",
+        "fix": "Improve experience-section segmentation and title extraction before role normalization."
+      },
+      {
+        "cv_id": "CV05",
+        "field": "jobTitles",
+        "cause": "Mixed-language CV likely reduced extraction/normalization accuracy",
+        "fix": "Improve experience-section segmentation and title extraction before role normalization."
+      },
+      {
+        "cv_id": "CV08",
+        "field": "jobTitles",
+        "cause": "Long senior CV likely hit summarization/truncation or chronology simplification",
+        "fix": "Improve experience-section segmentation and title extraction before role normalization."
+      }
+    ],
+    "skills-normalization": [
+      {
+        "cv_id": "CV06",
+        "field": "skills",
+        "cause": "Sparse source CV left little context for extraction",
+        "fix": "Normalize skill extraction with deduping, phrase preservation, and domain lexicon support."
+      },
+      {
+        "cv_id": "CV07",
+        "field": "skills",
+        "cause": "Sparse + inconsistent date formatting likely reduced parser confidence",
+        "fix": "Normalize skill extraction with deduping, phrase preservation, and domain lexicon support."
+      },
+      {
+        "cv_id": "CV14",
+        "field": "skills",
+        "cause": "OCR-like/noisy formatting degraded text extraction",
+        "fix": "Normalize skill extraction with deduping, phrase preservation, and domain lexicon support."
+      }
+    ],
+    "role-normalization": [
+      {
+        "cv_id": "CV08",
+        "field": "roleNormalization",
+        "cause": "Long senior CV likely hit summarization/truncation or chronology simplification",
+        "fix": "Expand role taxonomy and alias handling, and surface stronger reviewer evidence for uncertain mappings."
+      }
+    ],
+    "validation-and-review-thresholds": [
+      {
+        "cv_id": "CV08",
+        "field": "needsReview",
+        "cause": "Long senior CV likely hit summarization/truncation or chronology simplification",
+        "fix": "Tighten auto-match thresholds so straightforward CVs do not remain unresolved."
+      },
+      {
+        "cv_id": "CV09",
+        "field": "needsReview",
+        "cause": "Long senior CV likely hit summarization/truncation or chronology simplification",
+        "fix": "Tighten auto-match thresholds so straightforward CVs do not remain unresolved."
+      },
+      {
+        "cv_id": "CV12",
+        "field": "needsReview",
+        "cause": "Parser/normalizer missed a field that should be straightforward",
+        "fix": "Tighten auto-match thresholds so straightforward CVs do not remain unresolved."
+      }
+    ],
+    "text-extraction-and-header-parsing": [
+      {
+        "cv_id": "CV17",
+        "field": "name",
+        "cause": "Name extraction/parsing error",
+        "fix": "Improve header/contact extraction heuristics and preserve top-of-document text ordering."
+      }
+    ]
+  },
+  "results": [
+    {
+      "cv_id": "CV01",
+      "cv_type": "clean",
+      "variant": "clean",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "skills",
+        "experienceYears",
+        "roleNormalization",
+        "needsReview"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "certifications",
+          "actual": [
+            "BOSIET",
+            "MIST",
+            "OPITO",
+            "FOET"
+          ],
+          "likely_cause": "Parser/normalizer missed a field that should be straightforward",
+          "severity": "medium",
+          "recommended_fix": "Normalize certifications using alias dictionaries (for example OPITO FOET vs FOET) and structured splitting rules."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Martin Reeve",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "HNC Process Operations",
+        "jobTitles": [
+          "Senior Production Operator",
+          "Production Operator",
+          "Process Technician"
+        ],
+        "companies": [
+          "Harbor Energy",
+          "Petrofac",
+          "EnQuest"
+        ],
+        "skills": [
+          "Production operations",
+          "Gas compression",
+          "Permit to Work",
+          "Well testing",
+          "Safety isolation"
+        ],
+        "certifications": [
+          "BOSIET",
+          "MIST",
+          "OPITO",
+          "FOET"
+        ],
+        "experienceYears": 11,
+        "experiences": [
+          {
+            "companyName": "Harbor Energy",
+            "rawRoleTitle": "Senior Production Operator",
+            "standardRoleId": 35,
+            "standardRoleName": "Senior Production Operator",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2021-03",
+            "endDate": "Present",
+            "description": "Senior Production Operator"
+          },
+          {
+            "companyName": "Petrofac",
+            "rawRoleTitle": "Production Operator",
+            "standardRoleId": 34,
+            "standardRoleName": "Production Operator",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2017-01",
+            "endDate": "2021-02",
+            "description": "Production Operator"
+          },
+          {
+            "companyName": "EnQuest",
+            "rawRoleTitle": "Process Technician",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2015-06",
+            "endDate": "2016-12",
+            "description": "Process Technician"
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Senior Production Operator",
+            "years": 5
+          },
+          {
+            "jobTitle": "Production Operator",
+            "years": 4.1
+          },
+          {
+            "jobTitle": "Process Technician",
+            "years": 1.5
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV02",
+      "cv_type": "clean",
+      "variant": "clean",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization",
+        "needsReview"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "jobTitles",
+          "actual": [
+            "Drilling Supervisor",
+            "Drilling Superintendent"
+          ],
+          "likely_cause": "Parser/normalizer missed a field that should be straightforward",
+          "severity": "high",
+          "recommended_fix": "Improve experience-section segmentation and title extraction before role normalization."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Leila Mercer",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "BEng Petroleum Engineering",
+        "jobTitles": [
+          "Drilling Supervisor",
+          "Drilling Superintendent"
+        ],
+        "companies": [
+          "ADNOC Drilling",
+          "Shelf Drilling",
+          "KCA Deutag"
+        ],
+        "skills": [
+          "Drilling supervision",
+          "Well control",
+          "Jack-up operations",
+          "HPHT wells",
+          "Contractor management"
+        ],
+        "certifications": [
+          "SIWCF Level 4",
+          "BOSIET",
+          "H2S"
+        ],
+        "experienceYears": 17,
+        "experiences": [
+          {
+            "companyName": "ADNOC Drilling",
+            "rawRoleTitle": "Drilling Supervisor",
+            "standardRoleId": 39,
+            "standardRoleName": "Drilling Supervisor",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2019-07",
+            "endDate": "Present",
+            "description": "Senior Drilling Supervisor"
+          },
+          {
+            "companyName": "Shelf Drilling",
+            "rawRoleTitle": "Drilling Superintendent",
+            "standardRoleId": 43,
+            "standardRoleName": "Drilling Superintendent",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2014-01",
+            "endDate": "2019-06",
+            "description": "Drilling Superintendent"
+          },
+          {
+            "companyName": "KCA Deutag",
+            "rawRoleTitle": "Night Drilling Supervisor",
+            "standardRoleId": 39,
+            "standardRoleName": "Drilling Supervisor",
+            "matchConfidence": 0.95,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2009-04",
+            "endDate": "2013-12",
+            "description": "Night Drilling Supervisor"
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Drilling Supervisor",
+            "years": 11.4
+          },
+          {
+            "jobTitle": "Drilling Superintendent",
+            "years": 5.4
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV03",
+      "cv_type": "two-column",
+      "variant": "two-column",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        }
+      ],
+      "parsed_profile": {
+        "name": "Owen Hartley",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "NEBOSH Diploma",
+        "jobTitles": [
+          "Lead HSE Advisor",
+          "HSE Advisor",
+          "Safety Coach"
+        ],
+        "companies": [
+          "Aker BP",
+          "Transocean",
+          "Maersk Drilling"
+        ],
+        "skills": [
+          "HSE audits",
+          "Incident investigation",
+          "Behavioral safety",
+          "ISO 45001",
+          "Permit compliance"
+        ],
+        "certifications": [
+          "NEBOSH",
+          "IOSH Managing Safely",
+          "BOSIET"
+        ],
+        "experienceYears": 11,
+        "experiences": [
+          {
+            "companyName": "Aker BP",
+            "rawRoleTitle": "Lead HSE Advisor",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2022-01",
+            "endDate": "Present",
+            "description": "Lead HSE Advisor"
+          },
+          {
+            "companyName": "Transocean",
+            "rawRoleTitle": "HSE Advisor",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2018-08",
+            "endDate": "2021-12",
+            "description": "HSE Advisor"
+          },
+          {
+            "companyName": "Maersk Drilling",
+            "rawRoleTitle": "Safety Coach",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2015-02",
+            "endDate": "2018-07",
+            "description": "Safety Coach"
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Lead HSE Advisor",
+            "years": 4.2
+          },
+          {
+            "jobTitle": "Safety Coach",
+            "years": 3.4
+          },
+          {
+            "jobTitle": "HSE Advisor",
+            "years": 3.3
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV04",
+      "cv_type": "multilingual-ar-en",
+      "variant": "multilingual-ar-en",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        }
+      ],
+      "parsed_profile": {
+        "name": "Rami Solberg",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "BSc Mechanical Engineering",
+        "jobTitles": [
+          "Wellsite Engineer",
+          "Field Engineer",
+          "Mechanical Engineer"
+        ],
+        "companies": [
+          "Petroleum Development Oman",
+          "Schlumberger",
+          "Gulf Energy Services"
+        ],
+        "skills": [
+          "Well intervention",
+          "Coiled tubing",
+          "Wireline",
+          "Field reporting",
+          "Pressure control"
+        ],
+        "certifications": [
+          "SIWCF Level 3",
+          "H2S",
+          "Defensive Driving"
+        ],
+        "experienceYears": 10,
+        "experiences": [
+          {
+            "companyName": "Petroleum Development Oman",
+            "rawRoleTitle": "Wellsite Engineer",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2021-05",
+            "endDate": "Present",
+            "description": "Wellsite Engineer"
+          },
+          {
+            "companyName": "Schlumberger",
+            "rawRoleTitle": "Field Engineer",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2018-02",
+            "endDate": "2021-04",
+            "description": "Field Engineer"
+          },
+          {
+            "companyName": "Gulf Energy Services",
+            "rawRoleTitle": "Mechanical Engineer",
+            "standardRoleId": 20,
+            "standardRoleName": "Mechanical Engineer",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2016-06",
+            "endDate": "2018-01",
+            "description": "Mechanical Engineer"
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Wellsite Engineer",
+            "years": 4.9
+          },
+          {
+            "jobTitle": "Field Engineer",
+            "years": 3.2
+          },
+          {
+            "jobTitle": "Mechanical Engineer",
+            "years": 1.6
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV05",
+      "cv_type": "multilingual-fr-en",
+      "variant": "multilingual-fr-en",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "jobTitles",
+          "actual": [
+            "Geologist",
+            "Geoscientist",
+            "Junior Geologist"
+          ],
+          "likely_cause": "Mixed-language CV likely reduced extraction/normalization accuracy",
+          "severity": "high",
+          "recommended_fix": "Improve experience-section segmentation and title extraction before role normalization."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Claire DuPont",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "Master Geosciences Appliqu\u00e9es",
+        "jobTitles": [
+          "Geologist",
+          "Geoscientist",
+          "Junior Geologist"
+        ],
+        "companies": [
+          "TotalEnergies",
+          "Perenco",
+          "CGG"
+        ],
+        "skills": [
+          "Seismic interpretation",
+          "Reservoir characterization",
+          "Petrel",
+          "Well correlation",
+          "Basin analysis"
+        ],
+        "certifications": [
+          "GWO Working at Heights",
+          "First Aid"
+        ],
+        "experienceYears": 11,
+        "experiences": [
+          {
+            "companyName": "TotalEnergies",
+            "rawRoleTitle": "Development Geologist",
+            "standardRoleId": 11,
+            "standardRoleName": "Geologist",
+            "matchConfidence": 0.95,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2020-09",
+            "endDate": "Present",
+            "description": "Bilingual geologist with subsurface studies"
+          },
+          {
+            "companyName": "Perenco",
+            "rawRoleTitle": "Geoscientist",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2017-01",
+            "endDate": "2020-08",
+            "description": "Focused on clastic reservoirs"
+          },
+          {
+            "companyName": "CGG",
+            "rawRoleTitle": "Junior Geologist",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2015-04",
+            "endDate": "2016-12",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Geologist",
+            "years": 5.5
+          },
+          {
+            "jobTitle": "Geoscientist",
+            "years": 3.6
+          },
+          {
+            "jobTitle": "Junior Geologist",
+            "years": 1.7
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV06",
+      "cv_type": "short",
+      "variant": "short",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "skills",
+          "actual": [],
+          "likely_cause": "Sparse source CV left little context for extraction",
+          "severity": "medium",
+          "recommended_fix": "Normalize skill extraction with deduping, phrase preservation, and domain lexicon support."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Nadia Kerr",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "",
+        "jobTitles": [
+          "Roustabout",
+          "Deck Assistant"
+        ],
+        "companies": [
+          "Seplat Energy",
+          "Local Marine Services"
+        ],
+        "skills": [],
+        "certifications": [
+          "BOSIET",
+          "Manual Handling"
+        ],
+        "experienceYears": 5,
+        "experiences": [
+          {
+            "companyName": "Seplat Energy",
+            "rawRoleTitle": "Roustabout",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2023-02",
+            "endDate": "Present",
+            "description": "Entry-level offshore worker"
+          },
+          {
+            "companyName": "Local Marine Services",
+            "rawRoleTitle": "Deck Assistant",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2021-06",
+            "endDate": "2023-01",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Roustabout",
+            "years": 3.1
+          },
+          {
+            "jobTitle": "Deck Assistant",
+            "years": 1.6
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV07",
+      "cv_type": "short-messy",
+      "variant": "short-messy",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "skills",
+          "actual": [
+            "Drilling",
+            "Contract work",
+            "Rigging",
+            "Slinging"
+          ],
+          "likely_cause": "Sparse + inconsistent date formatting likely reduced parser confidence",
+          "severity": "medium",
+          "recommended_fix": "Normalize skill extraction with deduping, phrase preservation, and domain lexicon support."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Bruno Leist",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "High School",
+        "jobTitles": [
+          "Floorhand",
+          "Roughneck"
+        ],
+        "companies": [
+          "Nabors",
+          "KCA Deutag"
+        ],
+        "skills": [
+          "Drilling",
+          "Contract work",
+          "Rigging",
+          "Slinging"
+        ],
+        "certifications": [
+          "BOSIET",
+          "Rigging & Slinging"
+        ],
+        "experienceYears": 6,
+        "experiences": [
+          {
+            "companyName": "Nabors",
+            "rawRoleTitle": "Floorhand",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2022-01",
+            "endDate": "Present",
+            "description": "Floorhand with short drilling assignments"
+          },
+          {
+            "companyName": "KCA Deutag",
+            "rawRoleTitle": "Roughneck",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2020-01",
+            "endDate": "2022-01",
+            "description": "Intermittent contract work"
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Floorhand",
+            "years": 4.2
+          },
+          {
+            "jobTitle": "Roughneck",
+            "years": 2
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV08",
+      "cv_type": "long-senior",
+      "variant": "long-senior",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "jobTitles",
+          "actual": [
+            "Reservoir Engineer",
+            "Graduate Engineer"
+          ],
+          "likely_cause": "Long senior CV likely hit summarization/truncation or chronology simplification",
+          "severity": "high",
+          "recommended_fix": "Improve experience-section segmentation and title extraction before role normalization."
+        },
+        {
+          "field": "roleNormalization",
+          "actual": [
+            "reservoir engineer",
+            "reservoir engineer"
+          ],
+          "likely_cause": "Long senior CV likely hit summarization/truncation or chronology simplification",
+          "severity": "high",
+          "recommended_fix": "Expand role taxonomy and alias handling, and surface stronger reviewer evidence for uncertain mappings."
+        },
+        {
+          "field": "needsReview",
+          "actual": [
+            {
+              "companyName": "Chevron",
+              "rawRoleTitle": "Principal Reservoir Engineer",
+              "standardRoleId": 3,
+              "standardRoleName": "Reservoir Engineer",
+              "matchConfidence": 0.78,
+              "needsReview": true,
+              "reviewedByUser": false,
+              "startDate": "2018-03",
+              "endDate": "Present",
+              "description": "null"
+            }
+          ],
+          "likely_cause": "Long senior CV likely hit summarization/truncation or chronology simplification",
+          "severity": "medium",
+          "recommended_fix": "Tighten auto-match thresholds so straightforward CVs do not remain unresolved."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Helen Adebayo",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "MSc Petroleum Engineering",
+        "jobTitles": [
+          "Reservoir Engineer",
+          "Graduate Engineer"
+        ],
+        "companies": [
+          "Chevron",
+          "TotalEnergies",
+          "Shell",
+          "NNPC"
+        ],
+        "skills": [
+          "Reservoir simulation",
+          "Material balance",
+          "Field development planning",
+          "Eclipse",
+          "Production forecasting"
+        ],
+        "certifications": [
+          "SPE Courses",
+          "PMP"
+        ],
+        "experienceYears": 24,
+        "experiences": [
+          {
+            "companyName": "Chevron",
+            "rawRoleTitle": "Principal Reservoir Engineer",
+            "standardRoleId": 3,
+            "standardRoleName": "Reservoir Engineer",
+            "matchConfidence": 0.78,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2018-03",
+            "endDate": "Present",
+            "description": "null"
+          },
+          {
+            "companyName": "TotalEnergies",
+            "rawRoleTitle": "Senior Reservoir Engineer",
+            "standardRoleId": 3,
+            "standardRoleName": "Reservoir Engineer",
+            "matchConfidence": 0.95,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2011-01",
+            "endDate": "2018-02",
+            "description": "null"
+          },
+          {
+            "companyName": "Shell",
+            "rawRoleTitle": "Reservoir Engineer",
+            "standardRoleId": 3,
+            "standardRoleName": "Reservoir Engineer",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2004-06",
+            "endDate": "2010-12",
+            "description": "null"
+          },
+          {
+            "companyName": "NNPC",
+            "rawRoleTitle": "Graduate Engineer",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2001-08",
+            "endDate": "2004-05",
+            "description": "null"
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Reservoir Engineer",
+            "years": 21.6
+          },
+          {
+            "jobTitle": "Graduate Engineer",
+            "years": 2.7
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV09",
+      "cv_type": "long-senior",
+      "variant": "long-senior",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "needsReview",
+          "actual": [
+            {
+              "companyName": "BP",
+              "rawRoleTitle": "Production Superintendent",
+              "standardRoleId": null,
+              "standardRoleName": "",
+              "matchConfidence": 0.45,
+              "needsReview": true,
+              "reviewedByUser": false,
+              "startDate": "2013-01",
+              "endDate": "2019-01",
+              "description": ""
+            }
+          ],
+          "likely_cause": "Long senior CV likely hit summarization/truncation or chronology simplification",
+          "severity": "medium",
+          "recommended_fix": "Tighten auto-match thresholds so straightforward CVs do not remain unresolved."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Gavin Yule",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "BSc Chemical Engineering",
+        "jobTitles": [
+          "Operations Manager",
+          "Production Superintendent",
+          "Production Engineer"
+        ],
+        "companies": [
+          "Occidental",
+          "BP",
+          "ConocoPhillips"
+        ],
+        "skills": [
+          "Operations management",
+          "Brownfield optimization",
+          "Shutdown planning",
+          "P&L ownership",
+          "Asset integrity"
+        ],
+        "certifications": [
+          "Lean Six Sigma Green Belt",
+          "NEBOSH"
+        ],
+        "experienceYears": 22,
+        "experiences": [
+          {
+            "companyName": "Occidental",
+            "rawRoleTitle": "Operations Manager",
+            "standardRoleId": 44,
+            "standardRoleName": "Operations Manager",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2019-02",
+            "endDate": "Present",
+            "description": ""
+          },
+          {
+            "companyName": "BP",
+            "rawRoleTitle": "Production Superintendent",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2013-01",
+            "endDate": "2019-01",
+            "description": ""
+          },
+          {
+            "companyName": "ConocoPhillips",
+            "rawRoleTitle": "Production Engineer",
+            "standardRoleId": 2,
+            "standardRoleName": "Production Engineer",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2004-05",
+            "endDate": "2012-12",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Production Engineer",
+            "years": 8.6
+          },
+          {
+            "jobTitle": "Operations Manager",
+            "years": 7.1
+          },
+          {
+            "jobTitle": "Production Superintendent",
+            "years": 6
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV10",
+      "cv_type": "unusual-title",
+      "variant": "unusual-title",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        }
+      ],
+      "parsed_profile": {
+        "name": "Erika Voss",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "BSc Process Engineering",
+        "jobTitles": [
+          "Hydrocarbon Allocation Ninja",
+          "Production Allocation Analyst",
+          "Metering Coordinator"
+        ],
+        "companies": [
+          "BlueNord",
+          "INEOS Energy",
+          "TotalEnergies"
+        ],
+        "skills": [
+          "Allocation accounting",
+          "Production metering",
+          "Daily loss reporting",
+          "Hydrocarbon accounting"
+        ],
+        "certifications": [
+          "ISO 50001 Awareness"
+        ],
+        "experienceYears": 11,
+        "experiences": [
+          {
+            "companyName": "BlueNord",
+            "rawRoleTitle": "Hydrocarbon Allocation Ninja",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2022-04",
+            "endDate": "Present",
+            "description": ""
+          },
+          {
+            "companyName": "INEOS Energy",
+            "rawRoleTitle": "Production Allocation Analyst",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2018-01",
+            "endDate": "2022-03",
+            "description": ""
+          },
+          {
+            "companyName": "TotalEnergies",
+            "rawRoleTitle": "Metering Coordinator",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2015-02",
+            "endDate": "2017-12",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Production Allocation Analyst",
+            "years": 4.2
+          },
+          {
+            "jobTitle": "Hydrocarbon Allocation Ninja",
+            "years": 4
+          },
+          {
+            "jobTitle": "Metering Coordinator",
+            "years": 2.8
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV11",
+      "cv_type": "unusual-title",
+      "variant": "unusual-title",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "jobTitles",
+          "actual": [
+            "Integrity Champion",
+            "Well Integrity Engineer",
+            "Inspection Engineer"
+          ],
+          "likely_cause": "Non-standard internal role title challenged role normalization",
+          "severity": "high",
+          "recommended_fix": "Improve experience-section segmentation and title extraction before role normalization."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Samir Holt",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "BEng Mechanical Engineering",
+        "jobTitles": [
+          "Integrity Champion",
+          "Well Integrity Engineer",
+          "Inspection Engineer"
+        ],
+        "companies": [
+          "Borouge",
+          "Petrofac",
+          "ADNOC Gas"
+        ],
+        "skills": [
+          "Asset integrity",
+          "Corrosion management",
+          "RBI",
+          "Pressure systems",
+          "Inspection planning"
+        ],
+        "certifications": [
+          "API 580",
+          "NACE Level 2"
+        ],
+        "experienceYears": 12,
+        "experiences": [
+          {
+            "companyName": "Borouge",
+            "rawRoleTitle": "Integrity Champion",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2021-01",
+            "endDate": "Present",
+            "description": ""
+          },
+          {
+            "companyName": "Petrofac",
+            "rawRoleTitle": "Integrity Engineer",
+            "standardRoleId": 10,
+            "standardRoleName": "Well Integrity Engineer",
+            "matchConfidence": 0.95,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2017-03",
+            "endDate": "2020-12",
+            "description": ""
+          },
+          {
+            "companyName": "ADNOC Gas",
+            "rawRoleTitle": "Inspection Engineer",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2014-06",
+            "endDate": "2017-02",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Integrity Champion",
+            "years": 5.2
+          },
+          {
+            "jobTitle": "Well Integrity Engineer",
+            "years": 3.8
+          },
+          {
+            "jobTitle": "Inspection Engineer",
+            "years": 2.7
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV12",
+      "cv_type": "clean",
+      "variant": "clean",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "jobTitles",
+          "actual": [
+            "O\ufb00shore Mechanic",
+            "Mechanical Fitter",
+            "Maintenance Technician"
+          ],
+          "likely_cause": "Parser/normalizer missed a field that should be straightforward",
+          "severity": "high",
+          "recommended_fix": "Improve experience-section segmentation and title extraction before role normalization."
+        },
+        {
+          "field": "needsReview",
+          "actual": [
+            {
+              "companyName": "Woodside",
+              "rawRoleTitle": "O\ufb00shore Mechanic",
+              "standardRoleId": null,
+              "standardRoleName": "",
+              "matchConfidence": 0.45,
+              "needsReview": true,
+              "reviewedByUser": false,
+              "startDate": "2020-08",
+              "endDate": "Present",
+              "description": "Mechanical technician supporting offshore marine assets"
+            },
+            {
+              "companyName": "Santos",
+              "rawRoleTitle": "Mechanical Fitter",
+              "standardRoleId": null,
+              "standardRoleName": "",
+              "matchConfidence": 0.45,
+              "needsReview": true,
+              "reviewedByUser": false,
+              "startDate": "2016-01",
+              "endDate": "2020-07",
+              "description": ""
+            }
+          ],
+          "likely_cause": "Parser/normalizer missed a field that should be straightforward",
+          "severity": "high",
+          "recommended_fix": "Tighten auto-match thresholds so straightforward CVs do not remain unresolved."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Victor Hale",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "Diploma of Engineering - Mechanical",
+        "jobTitles": [
+          "O\ufb00shore Mechanic",
+          "Mechanical Fitter",
+          "Maintenance Technician"
+        ],
+        "companies": [
+          "Woodside",
+          "Santos",
+          "Toll Marine"
+        ],
+        "skills": [
+          "Rotating equipment",
+          "Diesel engines",
+          "Preventive maintenance",
+          "Hydraulics",
+          "CMMS"
+        ],
+        "certifications": [
+          "BOSIET",
+          "Con\ufb01ned Space",
+          "Forklift"
+        ],
+        "experienceYears": 13,
+        "experiences": [
+          {
+            "companyName": "Woodside",
+            "rawRoleTitle": "O\ufb00shore Mechanic",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2020-08",
+            "endDate": "Present",
+            "description": "Mechanical technician supporting offshore marine assets"
+          },
+          {
+            "companyName": "Santos",
+            "rawRoleTitle": "Mechanical Fitter",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2016-01",
+            "endDate": "2020-07",
+            "description": ""
+          },
+          {
+            "companyName": "Toll Marine",
+            "rawRoleTitle": "Maintenance Technician",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2013-02",
+            "endDate": "2015-12",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "O\ufb00shore Mechanic",
+            "years": 5.6
+          },
+          {
+            "jobTitle": "Mechanical Fitter",
+            "years": 4.5
+          },
+          {
+            "jobTitle": "Maintenance Technician",
+            "years": 2.8
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV13",
+      "cv_type": "table-heavy",
+      "variant": "table-heavy",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "skills",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "certifications",
+          "actual": [],
+          "likely_cause": "Table-heavy formatting likely reduced extraction fidelity",
+          "severity": "medium",
+          "recommended_fix": "Normalize certifications using alias dictionaries (for example OPITO FOET vs FOET) and structured splitting rules."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Maya Foster",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "Business Administration Diploma",
+        "jobTitles": [
+          "Senior Planner",
+          "Maintenance Scheduler",
+          "Planner"
+        ],
+        "companies": [
+          "Suncor",
+          "Cenovus",
+          "Enbridge"
+        ],
+        "skills": [
+          "Shutdown planning",
+          "Maintenance scheduling",
+          "Resource loading",
+          "SAP",
+          "Primavera"
+        ],
+        "certifications": [],
+        "experienceYears": 10,
+        "experiences": [
+          {
+            "companyName": "Suncor",
+            "rawRoleTitle": "Senior Planner",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2021-11",
+            "endDate": "Present",
+            "description": "null"
+          },
+          {
+            "companyName": "Cenovus",
+            "rawRoleTitle": "Maintenance Scheduler",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2018-05",
+            "endDate": "2021-10",
+            "description": "null"
+          },
+          {
+            "companyName": "Enbridge",
+            "rawRoleTitle": "Planner",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2015-09",
+            "endDate": "2018-04",
+            "description": "null"
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Senior Planner",
+            "years": 4.4
+          },
+          {
+            "jobTitle": "Maintenance Scheduler",
+            "years": 3.4
+          },
+          {
+            "jobTitle": "Planner",
+            "years": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV14",
+      "cv_type": "ocr-like",
+      "variant": "ocr-like",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "skills",
+          "actual": [],
+          "likely_cause": "OCR-like/noisy formatting degraded text extraction",
+          "severity": "medium",
+          "recommended_fix": "Normalize skill extraction with deduping, phrase preservation, and domain lexicon support."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Tariq Mendez",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "BSc Electrical Engineering",
+        "jobTitles": [
+          "Field Service Specialist",
+          "Service Engineer",
+          "Electrical Engineer"
+        ],
+        "companies": [
+          "Baker Hughes",
+          "Schlumberger",
+          "Basra Energy"
+        ],
+        "skills": [],
+        "certifications": [
+          "H2S",
+          "CompEx Awareness"
+        ],
+        "experienceYears": 11,
+        "experiences": [
+          {
+            "companyName": "Baker Hughes",
+            "rawRoleTitle": "Field Service Specialist",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2022-02",
+            "endDate": "Present",
+            "description": "Field service engineer supporting artificial lift equipment"
+          },
+          {
+            "companyName": "Schlumberger",
+            "rawRoleTitle": "Service Engineer",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2018-07",
+            "endDate": "2022-01",
+            "description": ""
+          },
+          {
+            "companyName": "Basra Energy",
+            "rawRoleTitle": "Electrical Engineer",
+            "standardRoleId": 21,
+            "standardRoleName": "Electrical Engineer",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2015-05",
+            "endDate": "2018-06",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Field Service Specialist",
+            "years": 4.1
+          },
+          {
+            "jobTitle": "Service Engineer",
+            "years": 3.5
+          },
+          {
+            "jobTitle": "Electrical Engineer",
+            "years": 3.1
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV15",
+      "cv_type": "many-short-roles",
+      "variant": "many-short-roles",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        }
+      ],
+      "parsed_profile": {
+        "name": "Aisha Karim",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "BEng Ocean Engineering",
+        "jobTitles": [
+          "Subsea Engineer Consultant",
+          "Project Subsea Engineer",
+          "Field Engineer",
+          "Subsea Project Engineer"
+        ],
+        "companies": [
+          "TechnipFMC",
+          "Subsea7",
+          "Oceaneering",
+          "Technip Energies"
+        ],
+        "skills": [
+          "Subsea installation",
+          "SURF support",
+          "Project engineering",
+          "ROV interface",
+          "Mobilisation"
+        ],
+        "certifications": [
+          "BOSIETO",
+          "Offshore Medical",
+          "IMCA Awareness"
+        ],
+        "experienceYears": 7,
+        "experiences": [
+          {
+            "companyName": "TechnipFMC",
+            "rawRoleTitle": "Subsea Engineer Consultant",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2024-01",
+            "endDate": "Present",
+            "description": ""
+          },
+          {
+            "companyName": "Subsea7",
+            "rawRoleTitle": "Project Subsea Engineer",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2022-05",
+            "endDate": "2023-12",
+            "description": ""
+          },
+          {
+            "companyName": "Oceaneering",
+            "rawRoleTitle": "Field Engineer",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2021-02",
+            "endDate": "2022-04",
+            "description": ""
+          },
+          {
+            "companyName": "Technip Energies",
+            "rawRoleTitle": "Subsea Project Engineer",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2018-08",
+            "endDate": "2021-01",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Subsea Project Engineer",
+            "years": 2.4
+          },
+          {
+            "jobTitle": "Subsea Engineer Consultant",
+            "years": 2.2
+          },
+          {
+            "jobTitle": "Project Subsea Engineer",
+            "years": 1.6
+          },
+          {
+            "jobTitle": "Field Engineer",
+            "years": 1.2
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV16",
+      "cv_type": "clean",
+      "variant": "clean",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization",
+        "needsReview"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "jobTitles",
+          "actual": [
+            "Petroleum Engineer",
+            "Production Engineer"
+          ],
+          "likely_cause": "Parser/normalizer missed a field that should be straightforward",
+          "severity": "high",
+          "recommended_fix": "Improve experience-section segmentation and title extraction before role normalization."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Jonas Richter",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "MSc Petroleum Engineering",
+        "jobTitles": [
+          "Petroleum Engineer",
+          "Production Engineer"
+        ],
+        "companies": [
+          "Wintershall Dea",
+          "OMV",
+          "DEA"
+        ],
+        "skills": [
+          "Production optimization",
+          "Nodal analysis",
+          "Artificial lift",
+          "Well performance",
+          "Economic screening"
+        ],
+        "certifications": [
+          "IWCF Level 4",
+          "Prince2 Foundation"
+        ],
+        "experienceYears": 10,
+        "experiences": [
+          {
+            "companyName": "Wintershall Dea",
+            "rawRoleTitle": "Petroleum Engineer",
+            "standardRoleId": 1,
+            "standardRoleName": "Petroleum Engineer",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2021-10",
+            "endDate": "Present",
+            "description": ""
+          },
+          {
+            "companyName": "OMV",
+            "rawRoleTitle": "Production Engineer",
+            "standardRoleId": 2,
+            "standardRoleName": "Production Engineer",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2018-03",
+            "endDate": "2021-09",
+            "description": ""
+          },
+          {
+            "companyName": "DEA",
+            "rawRoleTitle": "Junior Petroleum Engineer",
+            "standardRoleId": 1,
+            "standardRoleName": "Petroleum Engineer",
+            "matchConfidence": 0.78,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2016-07",
+            "endDate": "2018-02",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Petroleum Engineer",
+            "years": 6
+          },
+          {
+            "jobTitle": "Production Engineer",
+            "years": 3.5
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV17",
+      "cv_type": "all-caps",
+      "variant": "all-caps",
+      "passed_fields": [
+        "highestEducation",
+        "skills",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "name",
+          "actual": "LUCAS FINNELECTRICAL",
+          "likely_cause": "Name extraction/parsing error",
+          "severity": "high",
+          "recommended_fix": "Improve header/contact extraction heuristics and preserve top-of-document text ordering."
+        },
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "jobTitles",
+          "actual": [
+            "ELECTRICAL TECHNICIAN",
+            "TECHTRANSOCEAN",
+            "ELECTRICAL HELPER"
+          ],
+          "likely_cause": "All-caps noisy formatting weakened normalization and token quality",
+          "severity": "high",
+          "recommended_fix": "Improve experience-section segmentation and title extraction before role normalization."
+        },
+        {
+          "field": "companies",
+          "actual": [
+            "TALO ENERGY",
+            "E&I TECH",
+            "GULF MARINE"
+          ],
+          "likely_cause": "All-caps noisy formatting weakened normalization and token quality",
+          "severity": "medium",
+          "recommended_fix": "Improve company/title boundary detection in experience parsing."
+        },
+        {
+          "field": "certifications",
+          "actual": [],
+          "likely_cause": "All-caps noisy formatting weakened normalization and token quality",
+          "severity": "medium",
+          "recommended_fix": "Normalize certifications using alias dictionaries (for example OPITO FOET vs FOET) and structured splitting rules."
+        }
+      ],
+      "parsed_profile": {
+        "name": "LUCAS FINNELECTRICAL",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "ASSOCIATE DEGREE ELECTRICAL TECHNOLOGY",
+        "jobTitles": [
+          "ELECTRICAL TECHNICIAN",
+          "TECHTRANSOCEAN",
+          "ELECTRICAL HELPER"
+        ],
+        "companies": [
+          "TALO ENERGY",
+          "E&I TECH",
+          "GULF MARINE"
+        ],
+        "skills": [
+          "MCC TROUBLESHOOTING",
+          "HV/LV MAINTENANCE",
+          "EX EQUIPMENT",
+          "PTW",
+          "CALIBRATION"
+        ],
+        "certifications": [],
+        "experienceYears": 10,
+        "experiences": [
+          {
+            "companyName": "TALO ENERGY",
+            "rawRoleTitle": "ELECTRICAL TECHNICIAN",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2022-06",
+            "endDate": "Present",
+            "description": "Electrical Technician"
+          },
+          {
+            "companyName": "E&I TECH",
+            "rawRoleTitle": "TECHTRANSOCEAN",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2018-09",
+            "endDate": "2022-05",
+            "description": "Electrical Technician"
+          },
+          {
+            "companyName": "GULF MARINE",
+            "rawRoleTitle": "ELECTRICAL HELPER",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2016-01",
+            "endDate": "2018-08",
+            "description": "Electrical Helper"
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "ELECTRICAL TECHNICIAN",
+            "years": 3.8
+          },
+          {
+            "jobTitle": "TECHTRANSOCEAN",
+            "years": 3.7
+          },
+          {
+            "jobTitle": "ELECTRICAL HELPER",
+            "years": 2.6
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV18",
+      "cv_type": "domain-adjacent",
+      "variant": "domain-adjacent",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        }
+      ],
+      "parsed_profile": {
+        "name": "Priya Menon",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "MBA Supply Chain Management",
+        "jobTitles": [
+          "Procurement Specialist",
+          "Buyer",
+          "Supply Chain Analyst"
+        ],
+        "companies": [
+          "Saipem",
+          "McDermott",
+          "L&T Hydrocarbon"
+        ],
+        "skills": [
+          "Procurement",
+          "Vendor qualification",
+          "Expediting",
+          "SAP MM",
+          "Logistics coordination"
+        ],
+        "certifications": [
+          "CIPS Level 4",
+          "SAP MM"
+        ],
+        "experienceYears": 11,
+        "experiences": [
+          {
+            "companyName": "Saipem",
+            "rawRoleTitle": "Procurement Specialist",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2021-04",
+            "endDate": "Present",
+            "description": ""
+          },
+          {
+            "companyName": "McDermott",
+            "rawRoleTitle": "Buyer",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2018-01",
+            "endDate": "2021-03",
+            "description": ""
+          },
+          {
+            "companyName": "L&T Hydrocarbon",
+            "rawRoleTitle": "Supply Chain Analyst",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2015-07",
+            "endDate": "2017-12",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Procurement Specialist",
+            "years": 4.9
+          },
+          {
+            "jobTitle": "Buyer",
+            "years": 3.2
+          },
+          {
+            "jobTitle": "Supply Chain Analyst",
+            "years": 2.4
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV19",
+      "cv_type": "multilingual-es-en",
+      "variant": "multilingual-es-en",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "jobTitles",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        }
+      ],
+      "parsed_profile": {
+        "name": "Diego Alvarez",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "Ingenier\u00eda Mec\u00e1nica",
+        "jobTitles": [
+          "Pipeline Inspector",
+          "Inspection Engineer",
+          "Mechanical Inspector"
+        ],
+        "companies": [
+          "Pemex",
+          "TC Energy",
+          "Local Services"
+        ],
+        "skills": [
+          "Pipeline inspection",
+          "Corrosion monitoring",
+          "Thickness surveys",
+          "RBI support",
+          "Field reports"
+        ],
+        "certifications": [
+          "API 570",
+          "NDT Level II",
+          "H2SCORE"
+        ],
+        "experienceYears": 12,
+        "experiences": [
+          {
+            "companyName": "Pemex",
+            "rawRoleTitle": "Pipeline Inspector",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2021-01",
+            "endDate": "Present",
+            "description": "Inspection Engineer"
+          },
+          {
+            "companyName": "TC Energy",
+            "rawRoleTitle": "Inspection Engineer",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2017-04",
+            "endDate": "2020-12",
+            "description": ""
+          },
+          {
+            "companyName": "Local Services",
+            "rawRoleTitle": "Mechanical Inspector",
+            "standardRoleId": null,
+            "standardRoleName": "",
+            "matchConfidence": 0.45,
+            "needsReview": true,
+            "reviewedByUser": false,
+            "startDate": "2014-03",
+            "endDate": "2017-03",
+            "description": ""
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Pipeline Inspector",
+            "years": 5.2
+          },
+          {
+            "jobTitle": "Inspection Engineer",
+            "years": 3.7
+          },
+          {
+            "jobTitle": "Mechanical Inspector",
+            "years": 3
+          }
+        ]
+      }
+    },
+    {
+      "cv_id": "CV20",
+      "cv_type": "normalization-regression",
+      "variant": "normalization-regression",
+      "passed_fields": [
+        "name",
+        "highestEducation",
+        "companies",
+        "skills",
+        "certifications",
+        "experienceYears",
+        "roleNormalization",
+        "needsReview"
+      ],
+      "failed_fields": [
+        {
+          "field": "location",
+          "actual": "",
+          "likely_cause": "Profile schema does not capture location, so matching/search cannot rely on it",
+          "severity": "high",
+          "recommended_fix": "Add location extraction + normalized location model + review/edit support"
+        },
+        {
+          "field": "jobTitles",
+          "actual": [
+            "Senior Production Operator",
+            "Production Operator"
+          ],
+          "likely_cause": "Known operator-family normalization edge case",
+          "severity": "high",
+          "recommended_fix": "Improve experience-section segmentation and title extraction before role normalization."
+        }
+      ],
+      "parsed_profile": {
+        "name": "Sarah McIver",
+        "email": "",
+        "phoneNumber": "",
+        "highestEducation": "SVQ Process Operations",
+        "jobTitles": [
+          "Senior Production Operator",
+          "Production Operator"
+        ],
+        "companies": [
+          "CNOOC",
+          "Apache",
+          "TAQA"
+        ],
+        "skills": [
+          "Production operations",
+          "Control room support",
+          "Gas dehydration",
+          "Permit to Work",
+          "Alarm response"
+        ],
+        "certifications": [
+          "BOSIET",
+          "MIST",
+          "Emergency Response Team"
+        ],
+        "experienceYears": 15,
+        "experiences": [
+          {
+            "companyName": "CNOOC",
+            "rawRoleTitle": "Senior Production Operator",
+            "standardRoleId": 35,
+            "standardRoleName": "Senior Production Operator",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2020-05",
+            "endDate": "Present",
+            "description": "Senior Production Operator"
+          },
+          {
+            "companyName": "Apache",
+            "rawRoleTitle": "Production Operator",
+            "standardRoleId": 34,
+            "standardRoleName": "Production Operator",
+            "matchConfidence": 0.94,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2015-02",
+            "endDate": "2020-04",
+            "description": "Production Operator"
+          },
+          {
+            "companyName": "TAQA",
+            "rawRoleTitle": "Process Operator",
+            "standardRoleId": 34,
+            "standardRoleName": "Production Operator",
+            "matchConfidence": 0.95,
+            "needsReview": false,
+            "reviewedByUser": false,
+            "startDate": "2011-06",
+            "endDate": "2015-01",
+            "description": "Process Operator"
+          }
+        ],
+        "roleExperience": [
+          {
+            "jobTitle": "Production Operator",
+            "years": 8.8
+          },
+          {
+            "jobTitle": "Senior Production Operator",
+            "years": 5.9
+          }
+        ]
+      }
+    }
+  ]
+}
