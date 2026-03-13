@@ -1,4 +1,3 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace RigMatch.Api.Data;
@@ -8,11 +7,16 @@ public static class RigMatchDbBootstrapper
     public static async Task InitializeAsync(RigMatchDbContext dbContext, CancellationToken cancellationToken = default)
     {
         await dbContext.Database.EnsureCreatedAsync(cancellationToken);
-        await EnsureEmployerUserSchemaAsync(dbContext, cancellationToken);
-        await EnsureCvRecordSchemaAsync(dbContext, cancellationToken);
-        await EnsureCompanyProjectSchemaAsync(dbContext, cancellationToken);
-        await EnsureRoleAliasSchemaAsync(dbContext, cancellationToken);
-        await EnsureSuggestedRoleAliasSchemaAsync(dbContext, cancellationToken);
+
+        if (dbContext.Database.IsSqlite())
+        {
+            await EnsureEmployerUserSchemaAsync(dbContext, cancellationToken);
+            await EnsureCvRecordSchemaAsync(dbContext, cancellationToken);
+            await EnsureCompanyProjectSchemaAsync(dbContext, cancellationToken);
+            await EnsureRoleAliasSchemaAsync(dbContext, cancellationToken);
+            await EnsureSuggestedRoleAliasSchemaAsync(dbContext, cancellationToken);
+        }
+
         await RoleCatalogSeeder.SeedAsync(dbContext, cancellationToken);
     }
 

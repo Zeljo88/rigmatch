@@ -1,16 +1,16 @@
 # Azure Deployment Plan
 
-> **Status:** Ready for Validation
+> **Status:** Validated
 
-Generated: 2026-03-11T13:20:00+01:00
+Generated: 2026-03-12T10:45:00+01:00
 
 ---
 
 ## 1. Project Overview
 
-**Goal:** Add employer authentication to RigMatch so CVs and projects belong to authenticated employer users and their company instead of the development-only `X-Company-Id` header.
+**Goal:** Prepare RigMatch for Azure deployment with GitHub Actions on push to `master`, using App Service for the .NET API, Static Web Apps for the Angular frontend, PostgreSQL for relational data, Blob Storage for CV files, Application Insights for monitoring, and the existing Azure OpenAI resource for parsing.
 
-**Path:** Add Components
+**Path:** Modernize Existing
 
 ---
 
@@ -21,8 +21,8 @@ Generated: 2026-03-11T13:20:00+01:00
 | Classification | Development |
 | Scale | Small |
 | Budget | Cost-Optimized |
-| **Subscription** | Existing Azure resources unchanged for this feature |
-| **Location** | Existing Azure resources unchanged for this feature |
+| **Subscription** | Existing Azure subscription targeted by GitHub OIDC workflow |
+| **Location** | Sweden Central |
 
 ---
 
@@ -30,39 +30,43 @@ Generated: 2026-03-11T13:20:00+01:00
 
 | Component | Type | Technology | Path |
 |-----------|------|------------|------|
-| RigMatch frontend | Frontend | Angular | `frontend/` |
+| RigMatch frontend | Frontend | Angular 17 | `frontend/` |
 | RigMatch API | API | .NET 9 Web API | `backend/` |
-| SQLite data store | Database | SQLite | `backend/rigmatch.db` |
+| Local relational store | Database | SQLite | `backend/rigmatch*.db` |
+| Local CV file storage | File storage | Filesystem uploads | `backend/uploads/` |
 
 ---
 
 ## 4. Recipe Selection
 
-**Selected:** Existing local development workflow
+**Selected:** Bicep
 
-**Rationale:** This task adds application features only. Azure infrastructure, deployment topology, and service footprint remain unchanged.
+**Rationale:** The user explicitly wants GitHub Actions deployment on merge to `master` with direct control over infrastructure provisioning and application deployment steps. Bicep plus a hand-authored workflow keeps the pipeline explicit for App Service, Static Web Apps, PostgreSQL, and Blob Storage without adding an extra deployment wrapper.
 
 ---
 
 ## 5. Architecture
 
-**Stack:** Local development app backed by Azure OpenAI for CV parsing
+**Stack:** App Service
 
 ### Service Mapping
 
 | Component | Azure Service | SKU |
 |-----------|---------------|-----|
-| CV parsing | Azure OpenAI | Existing S0 deployment |
-| Employer projects | Existing API and frontend | Existing local app components |
-| Employer authentication | Existing API and frontend | JWT auth on top of .NET API and Angular app |
+| Angular frontend | Azure Static Web Apps | Free / Standard-ready |
+| .NET API | Azure App Service (Linux) | B1 |
+| API compute plan | Azure App Service Plan (Linux) | B1 |
+| Relational data | Azure Database for PostgreSQL Flexible Server | Burstable |
+| CV files | Azure Storage Account + Blob container | Standard LRS |
+| CV parsing | Azure OpenAI | Existing deployment |
 
 ### Supporting Services
 
 | Service | Purpose |
 |---------|---------|
-| SQLite | Development persistence |
-| Azure OpenAI | CV parsing and extraction |
-| JWT auth | Employer login/session enforcement |
+| Application Insights | API telemetry and diagnostics |
+| Managed Identity | Future service-to-service access |
+| GitHub Actions | CI/CD on push to `master` |
 
 ---
 
@@ -71,39 +75,48 @@ Generated: 2026-03-11T13:20:00+01:00
 ### Phase 1: Planning
 - [x] Analyze workspace
 - [x] Gather requirements
-- [x] Confirm feature direction from user discussion
+- [x] Confirm deployment direction and region with user
 - [x] Scan codebase
-- [x] Select implementation approach
+- [x] Select recipe
 - [x] Plan architecture
 - [x] **User approved this plan**
 
 ### Phase 2: Execution
-- [x] Add employer user persistence and auth configuration
-- [x] Add register/login/me API and JWT issuance
-- [x] Secure CV/project endpoints to use authenticated company context
-- [x] Add frontend login/register/session flow
-- [x] Remove dependency on `X-Company-Id` in normal app flow
+- [x] Research components (load references, inspect current code)
+- [x] Refactor backend for PostgreSQL support
+- [x] Refactor backend for Blob Storage-backed CV files
+- [x] Refactor application configuration for production/runtime settings
+- [x] Refactor frontend for production API configuration
+- [x] Generate infrastructure files
+- [x] Generate GitHub Actions workflow
 - [x] Update plan status to "Ready for Validation"
 
 ### Phase 3: Validation
-- [x] Build backend
-- [x] Build frontend
-- [x] Update validation proof
+- [x] Invoke azure-validate skill
+- [x] All validation checks pass
+- [x] Update plan status to "Validated"
+- [x] Record validation proof below
 
 ### Phase 4: Deployment
-- [ ] Not part of this task
+- [ ] Invoke azure-deploy skill
+- [ ] Deployment successful
+- [ ] Update plan status to "Deployed"
 
 ---
 
 ## 7. Validation Proof
 
+> **⛔ REQUIRED**: The azure-validate skill MUST populate this section before setting status to `Validated`. If this section is empty and status is `Validated`, the validation was bypassed improperly.
+
 | Check | Command Run | Result | Timestamp |
 |-------|-------------|--------|-----------|
-| Backend build | `dotnet build backend/RigMatch.Api.csproj -p:OutDir=bin/verify/` | ✅ Pass | 2026-03-11 |
-| Frontend build | `npm run build` | ✅ Pass (bundle warning only) | 2026-03-11 |
+| Backend build | `dotnet build backend/RigMatch.Api.csproj -p:OutDir=bin/verify/` | ✅ Pass | 2026-03-12 |
+| Frontend production build | `npm run build -- --configuration production` | ✅ Pass (bundle warning only) | 2026-03-12 |
+| Bicep compilation | `az bicep build --file infra/main.bicep --stdout` | ✅ Pass | 2026-03-12 |
+| Workflow YAML parse | `python -c "import yaml; ..."` | ✅ Pass | 2026-03-12 |
 
-**Validated by:** local build verification
-**Validation timestamp:** 2026-03-11
+**Validated by:** azure-validate workflow
+**Validation timestamp:** 2026-03-12
 
 ---
 
@@ -111,19 +124,19 @@ Generated: 2026-03-11T13:20:00+01:00
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `.azure/plan.md` | Feature plan | ✅ |
-| `.azure/plan.md` | Feature plan | ✅ |
-| `backend/Data/Entities/EmployerUser.cs` | Employer auth persistence | ✅ |
-| `backend/Controllers/AuthController.cs` | Auth API | ✅ |
-| `backend/Services/*` | JWT/session/auth helpers | ✅ |
-| `frontend/src/app/*` | Login/register/session UI | ✅ |
+| `.azure/plan.md` | Azure preparation plan | ✅ |
+| `infra/main.bicep` | Azure infrastructure definition | ✅ |
+| `.github/workflows/deploy-azure.yml` | CI/CD workflow | ✅ |
+| `frontend/src/environments/*` | Frontend environment configuration | ✅ |
+| `backend/Services/*` | Azure-aware file storage and config support | ✅ |
+| `docs/azure-deployment.md` | Azure setup and GitHub secrets guide | ✅ |
 
 ---
 
 ## 9. Next Steps
 
-> Current: Validation
+> Current: Validation complete, ready for deployment
 
-1. Restart backend so the new auth schema and JWT middleware are active.
-2. Register the first employer account in the frontend and test login, CV library, and projects.
-3. Replace the development signing key before any shared deployment.
+1. Add the required GitHub repository variables and secrets described in `docs/azure-deployment.md`.
+2. Configure GitHub OIDC against the target Azure subscription and resource group.
+3. Invoke azure-deploy when you want the first real deployment executed.

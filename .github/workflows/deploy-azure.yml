@@ -1,0 +1,162 @@
+name: Deploy RigMatch to Azure
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: rigmatch-azure-deploy
+  cancel-in-progress: true
+
+env:
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION || 'swedencentral' }}
+  AZURE_STATIC_WEB_APP_LOCATION: ${{ vars.AZURE_STATIC_WEB_APP_LOCATION || vars.AZURE_LOCATION || 'swedencentral' }}
+  RIGMATCH_NAME_PREFIX: ${{ vars.RIGMATCH_NAME_PREFIX || 'rigmatch' }}
+  POSTGRES_ADMIN_USERNAME: ${{ vars.POSTGRES_ADMIN_USERNAME || 'rigmatchadmin' }}
+  AZURE_OPENAI_DEPLOYMENT_NAME: ${{ vars.AZURE_OPENAI_DEPLOYMENT_NAME }}
+  DOTNET_VERSION: '9.0.x'
+  NODE_VERSION: '20'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure resource group
+        shell: bash
+        run: |
+          az group create \
+            --name "$AZURE_RESOURCE_GROUP" \
+            --location "$AZURE_LOCATION"
+
+      - name: Provision Azure infrastructure
+        id: infra
+        shell: bash
+        run: |
+          deployment_json="$(az deployment group create \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --template-file infra/main.bicep \
+            --parameters \
+              namePrefix="$RIGMATCH_NAME_PREFIX" \
+              location="$AZURE_LOCATION" \
+              staticWebAppLocation="$AZURE_STATIC_WEB_APP_LOCATION" \
+              postgresAdminUsername="$POSTGRES_ADMIN_USERNAME" \
+              postgresAdminPassword="${{ secrets.POSTGRES_ADMIN_PASSWORD }}" \
+            --output json)"
+
+          echo "$deployment_json" > deployment.json
+
+          echo "web_app_name=$(jq -r '.properties.outputs.webAppName.value' deployment.json)" >> "$GITHUB_OUTPUT"
+          echo "web_app_url=$(jq -r '.properties.outputs.webAppUrl.value' deployment.json)" >> "$GITHUB_OUTPUT"
+          echo "static_web_app_name=$(jq -r '.properties.outputs.staticWebAppName.value' deployment.json)" >> "$GITHUB_OUTPUT"
+          echo "static_web_app_url=$(jq -r '.properties.outputs.staticWebAppUrl.value' deployment.json)" >> "$GITHUB_OUTPUT"
+          echo "storage_account_name=$(jq -r '.properties.outputs.storageAccountName.value' deployment.json)" >> "$GITHUB_OUTPUT"
+          echo "blob_container_name=$(jq -r '.properties.outputs.blobContainerName.value' deployment.json)" >> "$GITHUB_OUTPUT"
+          echo "app_insights_connection_string=$(jq -r '.properties.outputs.appInsightsConnectionString.value' deployment.json)" >> "$GITHUB_OUTPUT"
+          echo "postgres_fqdn=$(jq -r '.properties.outputs.postgresFullyQualifiedDomainName.value' deployment.json)" >> "$GITHUB_OUTPUT"
+          echo "postgres_db_name=$(jq -r '.properties.outputs.postgresDatabaseName.value' deployment.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Configure API app settings
+        shell: bash
+        run: |
+          storage_connection_string="$(az storage account show-connection-string \
+            --name "${{ steps.infra.outputs.storage_account_name }}" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query connectionString \
+            --output tsv)"
+
+          postgres_connection_string="Host=${{ steps.infra.outputs.postgres_fqdn }};Database=${{ steps.infra.outputs.postgres_db_name }};Username=${POSTGRES_ADMIN_USERNAME};Password=${{ secrets.POSTGRES_ADMIN_PASSWORD }};Ssl Mode=Require;Trust Server Certificate=true"
+
+          az webapp config appsettings set \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "${{ steps.infra.outputs.web_app_name }}" \
+            --settings \
+              ASPNETCORE_ENVIRONMENT=Production \
+              WEBSITE_RUN_FROM_PACKAGE=1 \
+              APPLICATIONINSIGHTS_CONNECTION_STRING="${{ steps.infra.outputs.app_insights_connection_string }}" \
+              ConnectionStrings__DefaultConnection="$postgres_connection_string" \
+              Jwt__Issuer=RigMatch.Api \
+              Jwt__Audience=RigMatch.Frontend \
+              Jwt__SigningKey="${{ secrets.JWT_SIGNING_KEY }}" \
+              FileStorage__Provider=AzureBlob \
+              FileStorage__ContainerName="${{ steps.infra.outputs.blob_container_name }}" \
+              FileStorage__ConnectionString="$storage_connection_string" \
+              CvParsing__UseMockInDevelopment=false \
+              CvParsing__Endpoint="${{ secrets.AZURE_OPENAI_ENDPOINT }}" \
+              CvParsing__ApiKey="${{ secrets.AZURE_OPENAI_API_KEY }}" \
+              CvParsing__DeploymentName="${AZURE_OPENAI_DEPLOYMENT_NAME}" \
+              CvParsing__ApiVersion=2024-10-21 \
+              Cors__AllowedOrigins__0="${{ steps.infra.outputs.static_web_app_url }}"
+
+      - name: Publish API
+        shell: bash
+        run: |
+          dotnet publish backend/RigMatch.Api.csproj -c Release -o backend/publish
+          cd backend/publish
+          zip -r ../../backend-api.zip .
+
+      - name: Deploy API package
+        shell: bash
+        run: |
+          az webapp deploy \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "${{ steps.infra.outputs.web_app_name }}" \
+            --src-path backend-api.zip \
+            --type zip
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        shell: bash
+        run: npm ci
+
+      - name: Set frontend production API URL
+        shell: bash
+        run: |
+          sed -i "s|__API_BASE_URL__|${{ steps.infra.outputs.web_app_url }}|g" frontend/src/environments/environment.production.ts
+
+      - name: Build frontend
+        working-directory: frontend
+        shell: bash
+        run: npm run build -- --configuration production
+
+      - name: Fetch Static Web Apps deployment token
+        id: swa-token
+        shell: bash
+        run: |
+          token="$(az staticwebapp secrets list \
+            --name "${{ steps.infra.outputs.static_web_app_name }}" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query properties.apiKey \
+            --output tsv)"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy frontend
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa-token.outputs.token }}
+          action: upload
+          app_location: frontend/dist/frontend/browser
+          skip_app_build: true

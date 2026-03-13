@@ -7,9 +7,12 @@ public sealed class FileCvDiagnosticsLogger : ICvDiagnosticsLogger
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly string _logPath;
 
-    public FileCvDiagnosticsLogger(IWebHostEnvironment environment)
+    public FileCvDiagnosticsLogger()
     {
-        var directory = Path.Combine(environment.ContentRootPath, "logs");
+        var appServiceHome = Environment.GetEnvironmentVariable("HOME");
+        var directory = !string.IsNullOrWhiteSpace(appServiceHome)
+            ? Path.Combine(appServiceHome, "LogFiles", "RigMatch")
+            : Path.Combine(Path.GetTempPath(), "RigMatch", "logs");
         Directory.CreateDirectory(directory);
         _logPath = Path.Combine(directory, "cv-diagnostics.log");
     }
