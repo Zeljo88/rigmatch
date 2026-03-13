@@ -5,6 +5,9 @@ public sealed record CompanyCvDetailResponse(
     string FileUrl,
     string StructuredProfileJson,
     bool IsFinalized,
+    bool HasNeedsReview,
+    bool IsMatchReady,
+    string ReviewStatus,
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset? UpdatedAtUtc,
     string DownloadUrl);

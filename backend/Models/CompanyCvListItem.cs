@@ -7,4 +7,7 @@ public sealed record CompanyCvListItem(
     string? HighestEducation,
     int? ExperienceYears,
     DateTimeOffset CreatedAtUtc,
-    bool IsFinalized);
+    bool IsFinalized,
+    bool HasNeedsReview,
+    bool IsMatchReady,
+    string ReviewStatus);

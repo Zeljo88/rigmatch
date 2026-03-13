@@ -1,3 +1,4 @@
+import { HttpHeaders, HttpResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -73,5 +74,36 @@ describe('AppComponent', () => {
     expect(app.minExpFilter).toBeNull();
     expect(app.educationFilter).toBe('');
     expect(app.certFilter).toBe('');
+  });
+
+  it('should derive download filename from content-disposition header', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance as any;
+
+    const response = new HttpResponse<Blob>({
+      body: new Blob(['pdf'], { type: 'application/pdf' }),
+      headers: new HttpHeaders({ 'content-disposition': 'attachment; filename="candidate-file.pdf"' })
+    });
+
+    const fileName = app.resolveDownloadFileName(response, {
+      structuredProfile: { name: 'Fallback Candidate' }
+    });
+
+    expect(fileName).toBe('candidate-file.pdf');
+  });
+
+  it('should fall back to a sanitized candidate-name filename', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance as any;
+
+    const response = new HttpResponse<Blob>({
+      body: new Blob(['pdf'], { type: 'application/pdf' })
+    });
+
+    const fileName = app.resolveDownloadFileName(response, {
+      structuredProfile: { name: 'Jane Doe / Lead Operator' }
+    });
+
+    expect(fileName).toBe('Jane_Doe_Lead_Operator.pdf');
   });
 });

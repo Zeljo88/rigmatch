@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -68,7 +68,7 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
 
   readonly apiBaseUrl = API_BASE_URL;
-  readonly displayedColumns = ['name', 'latestTitle', 'highestEducation', 'experienceYears', 'createdAtUtc', 'actions'];
+  readonly displayedColumns = ['name', 'latestTitle', 'status', 'highestEducation', 'experienceYears', 'createdAtUtc', 'actions'];
 
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
@@ -314,6 +314,9 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
             id: response.id,
             fileUrl: response.fileUrl,
             isFinalized: response.isFinalized,
+            hasNeedsReview: response.hasNeedsReview,
+            isMatchReady: response.isMatchReady,
+            reviewStatus: response.reviewStatus,
             createdAtUtc: response.createdAtUtc,
             updatedAtUtc: response.updatedAtUtc,
             downloadUrl: response.downloadUrl,
@@ -397,8 +400,66 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
     this.setPage(this.candidateDetailReturnPage);
   }
 
+  downloadCv(detail: CompanyCvDetailView): void {
+    if (this.isBusyAction) {
+      return;
+    }
+
+    this.isBusyAction = true;
+    this.http
+      .get(`${this.apiBaseUrl}${detail.downloadUrl}`, {
+        observe: 'response',
+        responseType: 'blob'
+      })
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          this.isBusyAction = false;
+
+          const blob = response.body ?? new Blob([], { type: 'application/pdf' });
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const fileName = this.resolveDownloadFileName(response, detail);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = fileName;
+          link.rel = 'noopener';
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 0);
+        },
+        error: (error) => {
+          this.isBusyAction = false;
+          this.showError((error?.error?.message as string) ?? 'Failed to download CV PDF.');
+        }
+      });
+  }
+
   get candidateDetailBackLabel(): string {
     return this.candidateDetailReturnPage === 'projects' ? 'Back to Projects' : 'Back to Library';
+  }
+
+  getReviewStatusLabel(status?: string | null): string {
+    switch ((status ?? '').toLowerCase()) {
+      case 'match-ready':
+        return 'Match Ready';
+      case 'needs-review':
+        return 'Needs Review';
+      case 'draft':
+      default:
+        return 'Draft';
+    }
+  }
+
+  getReviewStatusClass(status?: string | null): string {
+    switch ((status ?? '').toLowerCase()) {
+      case 'match-ready':
+        return 'status-chip status-chip-ready';
+      case 'needs-review':
+        return 'status-chip status-chip-review';
+      case 'draft':
+      default:
+        return 'status-chip status-chip-draft';
+    }
   }
 
   private openEditDialog(
@@ -441,6 +502,7 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
           this.loadLibrary();
 
           if (this.selectedCvDetail?.id === cvId) {
+            const hasNeedsReview = profile.experiences.some(exp => !!exp.needsReview);
             this.selectedCvDetail = {
               ...this.selectedCvDetail,
               structuredProfile: {
@@ -449,6 +511,9 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
                 roleExperience: this.buildRoleExperience(profile.experiences)
               },
               isFinalized: true,
+              hasNeedsReview,
+              isMatchReady: !hasNeedsReview,
+              reviewStatus: hasNeedsReview ? 'needs-review' : 'match-ready',
               updatedAtUtc: new Date().toISOString()
             };
           }
@@ -527,6 +592,23 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
           onSuccess([]);
         }
       });
+  }
+
+  private resolveDownloadFileName(response: HttpResponse<Blob>, detail: CompanyCvDetailView): string {
+    const contentDisposition = response.headers.get('content-disposition') ?? response.headers.get('Content-Disposition') ?? '';
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match?.[1]) {
+      return decodeURIComponent(utf8Match[1]).trim();
+    }
+
+    const basicMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+    if (basicMatch?.[1]) {
+      return basicMatch[1].trim();
+    }
+
+    const candidateName = (detail.structuredProfile.name ?? 'candidate').trim() || 'candidate';
+    const safeName = candidateName.replace(/[^a-z0-9-_]+/gi, '_').replace(/^_+|_+$/g, '');
+    return `${safeName || 'candidate'}.pdf`;
   }
 
   private parseStructuredProfile(json: string): CompanyCvStructuredProfile {

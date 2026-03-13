@@ -317,8 +317,7 @@ public class CompanyCvController : ControllerBase
         {
             return Unauthorized(new { message = "Authentication required." });
         }
-        var educationFilter = !string.IsNullOrWhiteSpace(education) ? education : location;
-        var list = await BuildCompanyCvListAsync(company.Id, q, minExp, educationFilter, cert, needsReview, cancellationToken);
+        var list = await BuildCompanyCvListAsync(company.Id, q, minExp, education, cert, needsReview, cancellationToken);
         return Ok(list);
     }
 
@@ -349,12 +348,16 @@ public class CompanyCvController : ControllerBase
 
         var structuredJson = record.FinalJson ?? record.ParsedDraftJson;
         var downloadUrl = $"/company/cv/{record.Id}/download";
+        var reviewStatus = CvReviewStatusEvaluator.Evaluate(record);
 
         return Ok(new CompanyCvDetailResponse(
             record.Id,
             record.FileUrl,
             structuredJson,
-            !string.IsNullOrWhiteSpace(record.FinalJson),
+            reviewStatus.IsFinalized,
+            reviewStatus.HasNeedsReview,
+            reviewStatus.IsMatchReady,
+            reviewStatus.ReviewStatus,
             record.CreatedAtUtc,
             record.UpdatedAtUtc,
             downloadUrl));
@@ -510,14 +513,21 @@ public class CompanyCvController : ControllerBase
 
         return rows
             .OrderByDescending(row => row.Record.CreatedAtUtc)
-            .Select(row => new CompanyCvListItem(
-                row.Record.Id,
-                row.Snapshot?.Name ?? "Unknown candidate",
-                row.Snapshot?.JobTitles?.FirstOrDefault() ?? "N/A",
-                row.Snapshot?.HighestEducation,
-                row.Snapshot?.ExperienceYears,
-                row.Record.CreatedAtUtc,
-                !string.IsNullOrWhiteSpace(row.Record.FinalJson)))
+            .Select(row =>
+            {
+                var reviewStatus = CvReviewStatusEvaluator.Evaluate(row.Record);
+                return new CompanyCvListItem(
+                    row.Record.Id,
+                    row.Snapshot?.Name ?? "Unknown candidate",
+                    row.Snapshot?.JobTitles?.FirstOrDefault() ?? "N/A",
+                    row.Snapshot?.HighestEducation,
+                    row.Snapshot?.ExperienceYears,
+                    row.Record.CreatedAtUtc,
+                    reviewStatus.IsFinalized,
+                    reviewStatus.HasNeedsReview,
+                    reviewStatus.IsMatchReady,
+                    reviewStatus.ReviewStatus);
+            })
             .ToArray();
     }
 
