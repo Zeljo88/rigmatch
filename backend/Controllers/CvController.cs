@@ -16,18 +16,18 @@ public class CvController : ControllerBase
     };
 
     private const long MaxFileSizeBytes = 10 * 1024 * 1024;
-    private readonly IWebHostEnvironment _environment;
+    private readonly IFileStorageService _fileStorageService;
     private readonly ICvTextExtractionService _cvTextExtractionService;
     private readonly ICvParsingService _cvParsingService;
     private readonly ILogger<CvController> _logger;
 
     public CvController(
-        IWebHostEnvironment environment,
+        IFileStorageService fileStorageService,
         ICvTextExtractionService cvTextExtractionService,
         ICvParsingService cvParsingService,
         ILogger<CvController> logger)
     {
-        _environment = environment;
+        _fileStorageService = fileStorageService;
         _cvTextExtractionService = cvTextExtractionService;
         _cvParsingService = cvParsingService;
         _logger = logger;
@@ -44,13 +44,21 @@ public class CvController : ControllerBase
             return validationError;
         }
 
-        var storedFile = await SaveUploadedFileAsync(file!, cancellationToken);
+        var stagedFilePath = await SaveUploadedFileAsync(file!, cancellationToken);
+        try
+        {
+            var storagePath = await _fileStorageService.SaveAsync(stagedFilePath, file!.FileName, file.ContentType, cancellationToken);
 
-        return Ok(new CvUploadResponse(
-            file!.FileName,
-            file.Length,
-            storedFile.StoragePath,
-            DateTimeOffset.UtcNow));
+            return Ok(new CvUploadResponse(
+                file.FileName,
+                file.Length,
+                storagePath,
+                DateTimeOffset.UtcNow));
+        }
+        finally
+        {
+            DeleteTemporaryFile(stagedFilePath);
+        }
     }
 
     [HttpPost("extract-text")]
@@ -71,16 +79,17 @@ public class CvController : ControllerBase
             return BadRequest(new { message = "Day 2 supports text extraction from PDF files only." });
         }
 
-        var storedFile = await SaveUploadedFileAsync(file, cancellationToken);
+        var stagedFilePath = await SaveUploadedFileAsync(file, cancellationToken);
 
         try
         {
-            var extractedText = await _cvTextExtractionService.ExtractTextFromPdfAsync(storedFile.AbsolutePath, cancellationToken);
+            var extractedText = await _cvTextExtractionService.ExtractTextFromPdfAsync(stagedFilePath, cancellationToken);
+            var storagePath = await _fileStorageService.SaveAsync(stagedFilePath, file.FileName, file.ContentType, cancellationToken);
 
             return Ok(new CvTextExtractionResponse(
                 file.FileName,
                 file.Length,
-                storedFile.StoragePath,
+                storagePath,
                 extractedText,
                 extractedText.Length,
                 DateTimeOffset.UtcNow));
@@ -88,6 +97,10 @@ public class CvController : ControllerBase
         catch (InvalidDataException)
         {
             return BadRequest(new { message = "The uploaded PDF could not be parsed. Please upload a valid PDF file." });
+        }
+        finally
+        {
+            DeleteTemporaryFile(stagedFilePath);
         }
     }
 
@@ -109,48 +122,54 @@ public class CvController : ControllerBase
             return BadRequest(new { message = "Day 3 supports parsing from PDF files only." });
         }
 
-        var storedFile = await SaveUploadedFileAsync(file, cancellationToken);
-
-        string extractedText;
         try
         {
-            extractedText = await _cvTextExtractionService.ExtractTextFromPdfAsync(storedFile.AbsolutePath, cancellationToken);
+            var stagedFilePath = await SaveUploadedFileAsync(file, cancellationToken);
+            try
+            {
+                var extractedText = await _cvTextExtractionService.ExtractTextFromPdfAsync(stagedFilePath, cancellationToken);
+                ParsedCandidateProfile parsedProfile;
+                try
+                {
+                    parsedProfile = await _cvParsingService.ParseCvTextAsync(extractedText, cancellationToken);
+                }
+                catch (AiServiceException ex) when (ex.StatusCode == 429)
+                {
+                    return StatusCode(429, new { message = ex.Message, retryAfterSeconds = ex.RetryAfterSeconds });
+                }
+                catch (AiServiceException ex)
+                {
+                    return StatusCode(502, new { message = ex.Message });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    _logger.LogWarning(ex, "CV parsing configuration is invalid.");
+                    return StatusCode(500, new { message = ex.Message });
+                }
+                catch (HttpRequestException)
+                {
+                    return StatusCode(502, new { message = "Failed to reach the AI parsing service." });
+                }
+
+                var storagePath = await _fileStorageService.SaveAsync(stagedFilePath, file.FileName, file.ContentType, cancellationToken);
+
+                return Ok(new CvParseFileResponse(
+                    file.FileName,
+                    file.Length,
+                    storagePath,
+                    extractedText.Length,
+                    parsedProfile,
+                    DateTimeOffset.UtcNow));
+            }
+            finally
+            {
+                DeleteTemporaryFile(stagedFilePath);
+            }
         }
         catch (InvalidDataException)
         {
             return BadRequest(new { message = "The uploaded PDF could not be parsed. Please upload a valid PDF file." });
         }
-
-        ParsedCandidateProfile parsedProfile;
-        try
-        {
-            parsedProfile = await _cvParsingService.ParseCvTextAsync(extractedText, cancellationToken);
-        }
-        catch (AiServiceException ex) when (ex.StatusCode == 429)
-        {
-            return StatusCode(429, new { message = ex.Message, retryAfterSeconds = ex.RetryAfterSeconds });
-        }
-        catch (AiServiceException ex)
-        {
-            return StatusCode(502, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            _logger.LogWarning(ex, "CV parsing configuration is invalid.");
-            return StatusCode(500, new { message = ex.Message });
-        }
-        catch (HttpRequestException)
-        {
-            return StatusCode(502, new { message = "Failed to reach the AI parsing service." });
-        }
-
-        return Ok(new CvParseFileResponse(
-            file.FileName,
-            file.Length,
-            storedFile.StoragePath,
-            extractedText.Length,
-            parsedProfile,
-            DateTimeOffset.UtcNow));
     }
 
     [HttpPost("parse-text")]
@@ -208,23 +227,27 @@ public class CvController : ControllerBase
         return null;
     }
 
-    private async Task<StoredFileResult> SaveUploadedFileAsync(IFormFile file, CancellationToken cancellationToken)
+    private async Task<string> SaveUploadedFileAsync(IFormFile file, CancellationToken cancellationToken)
     {
-        var uploadsDirectory = Path.Combine(_environment.ContentRootPath, "uploads");
-        Directory.CreateDirectory(uploadsDirectory);
-
         var extension = Path.GetExtension(file.FileName);
-        var storedFileName = $"{Guid.NewGuid():N}{extension}";
-        var storedFilePath = Path.Combine(uploadsDirectory, storedFileName);
+        var storedFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}{extension}");
 
         await using (var stream = System.IO.File.Create(storedFilePath))
         {
             await file.CopyToAsync(stream, cancellationToken);
         }
 
-        _logger.LogInformation("CV uploaded. OriginalName={OriginalName} StoredFile={StoredFile}", file.FileName, storedFileName);
+        _logger.LogInformation("CV uploaded. OriginalName={OriginalName} StagedFile={StoredFile}", file.FileName, storedFilePath);
 
-        return new StoredFileResult(storedFilePath, $"uploads/{storedFileName}");
+        return storedFilePath;
+    }
+
+    private static void DeleteTemporaryFile(string filePath)
+    {
+        if (System.IO.File.Exists(filePath))
+        {
+            System.IO.File.Delete(filePath);
+        }
     }
 }
 
@@ -241,5 +264,3 @@ public sealed record CvTextExtractionResponse(
     string ExtractedText,
     int CharacterCount,
     DateTimeOffset ExtractedAtUtc);
-
-internal sealed record StoredFileResult(string AbsolutePath, string StoragePath);

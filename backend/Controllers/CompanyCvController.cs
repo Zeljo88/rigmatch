@@ -30,7 +30,7 @@ public class CompanyCvController : ControllerBase
     };
 
     private readonly RigMatchDbContext _dbContext;
-    private readonly IWebHostEnvironment _environment;
+    private readonly IFileStorageService _fileStorageService;
     private readonly ICvTextExtractionService _cvTextExtractionService;
     private readonly ICvParsingService _cvParsingService;
     private readonly ICvParsingGate _cvParsingGate;
@@ -40,7 +40,7 @@ public class CompanyCvController : ControllerBase
 
     public CompanyCvController(
         RigMatchDbContext dbContext,
-        IWebHostEnvironment environment,
+        IFileStorageService fileStorageService,
         ICvTextExtractionService cvTextExtractionService,
         ICvParsingService cvParsingService,
         ICvParsingGate cvParsingGate,
@@ -49,7 +49,7 @@ public class CompanyCvController : ControllerBase
         ILogger<CompanyCvController> logger)
     {
         _dbContext = dbContext;
-        _environment = environment;
+        _fileStorageService = fileStorageService;
         _cvTextExtractionService = cvTextExtractionService;
         _cvParsingService = cvParsingService;
         _cvParsingGate = cvParsingGate;
@@ -76,8 +76,11 @@ public class CompanyCvController : ControllerBase
         {
             return Unauthorized(new { message = "Authentication required." });
         }
-        var storedFile = await SaveUploadedFileAsync(file!, cancellationToken);
-        var fileHash = await ComputeFileHashAsync(storedFile.AbsolutePath, cancellationToken);
+
+        var stagedFilePath = await SaveUploadedFileAsync(file!, cancellationToken);
+        try
+        {
+            var fileHash = await ComputeFileHashAsync(stagedFilePath, cancellationToken);
         await _diagnosticsLogger.LogAsync(
             "upload.received",
             $"companyId={company.Id} fileName={file!.FileName} fileSize={file.Length} fileHash={fileHash}",
@@ -97,6 +100,11 @@ public class CompanyCvController : ControllerBase
             var cachedProfile = JsonSerializer.Deserialize<ParsedCandidateProfile>(cachedRecord.ParsedDraftJson, JsonOptions);
             if (cachedProfile is not null)
             {
+                var storagePath = await _fileStorageService.SaveAsync(
+                    stagedFilePath,
+                    file.FileName,
+                    file.ContentType,
+                    cancellationToken);
                 await _diagnosticsLogger.LogAsync(
                     "upload.cache-hit",
                     $"sourceRecordId={cachedRecord.Id} fileHash={fileHash}",
@@ -106,7 +114,7 @@ public class CompanyCvController : ControllerBase
                 {
                     Id = Guid.NewGuid(),
                     CompanyId = company.Id,
-                    FileUrl = storedFile.StoragePath,
+                    FileUrl = storagePath,
                     FileHash = fileHash,
                     ParsedDraftJson = cachedRecord.ParsedDraftJson,
                     CreatedAtUtc = DateTimeOffset.UtcNow
@@ -138,7 +146,7 @@ public class CompanyCvController : ControllerBase
         string extractedText;
         try
         {
-            extractedText = await _cvTextExtractionService.ExtractTextFromPdfAsync(storedFile.AbsolutePath, cancellationToken);
+            extractedText = await _cvTextExtractionService.ExtractTextFromPdfAsync(stagedFilePath, cancellationToken);
             await _diagnosticsLogger.LogAsync(
                 "upload.extracted",
                 $"fileHash={fileHash} extractedChars={extractedText.Length}",
@@ -170,11 +178,16 @@ public class CompanyCvController : ControllerBase
             return StatusCode(500, new { message = ex.Message });
         }
 
+        var persistedStoragePath = await _fileStorageService.SaveAsync(
+            stagedFilePath,
+            file.FileName,
+            file.ContentType,
+            cancellationToken);
         var record = new CvRecord
         {
             Id = Guid.NewGuid(),
             CompanyId = company.Id,
-            FileUrl = storedFile.StoragePath,
+            FileUrl = persistedStoragePath,
             FileHash = fileHash,
             ParsedDraftJson = JsonSerializer.Serialize(parsedProfile, StorageJsonOptions),
             CreatedAtUtc = DateTimeOffset.UtcNow
@@ -200,6 +213,11 @@ public class CompanyCvController : ControllerBase
             parsedProfile,
             record.CreatedAtUtc,
             duplicateWarnings));
+        }
+        finally
+        {
+            DeleteTemporaryFile(stagedFilePath);
+        }
     }
 
     [HttpPost("cv/{id:guid}/save")]
@@ -255,22 +273,16 @@ public class CompanyCvController : ControllerBase
             return NotFound(new { message = "CV record not found for this company." });
         }
 
-        var normalizedRelativePath = record.FileUrl.Replace('/', Path.DirectorySeparatorChar);
-        var absolutePath = Path.Combine(_environment.ContentRootPath, normalizedRelativePath);
-
         _dbContext.CvRecords.Remove(record);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        if (System.IO.File.Exists(absolutePath))
+        try
         {
-            try
-            {
-                System.IO.File.Delete(absolutePath);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to delete stored file for CV record {CvId}.", record.Id);
-            }
+            await _fileStorageService.DeleteAsync(record.FileUrl, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete stored file for CV record {CvId}.", record.Id);
         }
 
         return NoContent();
@@ -366,16 +378,14 @@ public class CompanyCvController : ControllerBase
             return NotFound(new { message = "CV record not found for this company." });
         }
 
-        var normalizedRelativePath = record.FileUrl.Replace('/', Path.DirectorySeparatorChar);
-        var absolutePath = Path.Combine(_environment.ContentRootPath, normalizedRelativePath);
-
-        if (!System.IO.File.Exists(absolutePath))
+        var stream = await _fileStorageService.OpenReadAsync(record.FileUrl, cancellationToken);
+        if (stream is null)
         {
             return NotFound(new { message = "Original CV file was not found on storage." });
         }
 
-        var downloadFileName = Path.GetFileName(absolutePath);
-        return PhysicalFile(absolutePath, "application/pdf", downloadFileName);
+        var downloadFileName = Path.GetFileName(record.FileUrl.Replace('/', Path.DirectorySeparatorChar));
+        return File(stream, "application/pdf", downloadFileName);
     }
 
     private ActionResult? ValidatePdfFile(IFormFile? file)
@@ -411,21 +421,25 @@ public class CompanyCvController : ControllerBase
             .FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
     }
 
-    private async Task<StoredFileResult> SaveUploadedFileAsync(IFormFile file, CancellationToken cancellationToken)
+    private static async Task<string> SaveUploadedFileAsync(IFormFile file, CancellationToken cancellationToken)
     {
-        var uploadsDirectory = Path.Combine(_environment.ContentRootPath, "uploads");
-        Directory.CreateDirectory(uploadsDirectory);
-
         var extension = Path.GetExtension(file.FileName);
-        var storedFileName = $"{Guid.NewGuid():N}{extension}";
-        var storedFilePath = Path.Combine(uploadsDirectory, storedFileName);
+        var storedFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}{extension}");
 
         await using (var stream = System.IO.File.Create(storedFilePath))
         {
             await file.CopyToAsync(stream, cancellationToken);
         }
 
-        return new StoredFileResult(storedFilePath, $"uploads/{storedFileName}");
+        return storedFilePath;
+    }
+
+    private static void DeleteTemporaryFile(string filePath)
+    {
+        if (System.IO.File.Exists(filePath))
+        {
+            System.IO.File.Delete(filePath);
+        }
     }
 
     private static ProfileSnapshot? ParseProfileSnapshot(string json)
