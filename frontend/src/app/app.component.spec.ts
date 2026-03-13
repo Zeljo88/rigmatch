@@ -19,6 +19,17 @@ describe('AppComponent', () => {
 
   it('should keep company upload button disabled when no file is selected', () => {
     const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    app.authResolved = true;
+    app.authSession = {
+      token: 'token',
+      expiresAtUtc: '',
+      userId: 'user-id',
+      fullName: 'Demo User',
+      email: 'demo@example.com',
+      companyId: 'company-id',
+      companyName: 'Demo Company'
+    };
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -30,6 +41,16 @@ describe('AppComponent', () => {
   it('should switch to settings page', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
+    app.authResolved = true;
+    app.authSession = {
+      token: 'token',
+      expiresAtUtc: '',
+      userId: 'user-id',
+      fullName: 'Demo User',
+      email: 'demo@example.com',
+      companyId: 'company-id',
+      companyName: 'Demo Company'
+    };
 
     app.setPage('settings');
 
@@ -43,14 +64,14 @@ describe('AppComponent', () => {
 
     app.searchQuery = 'Operator';
     app.minExpFilter = 5;
-    app.locationFilter = 'Dubai';
+    app.educationFilter = 'Bachelor';
     app.certFilter = 'IWCF';
 
     app.clearFilters();
 
     expect(app.searchQuery).toBe('');
     expect(app.minExpFilter).toBeNull();
-    expect(app.locationFilter).toBe('');
+    expect(app.educationFilter).toBe('');
     expect(app.certFilter).toBe('');
   });
 });

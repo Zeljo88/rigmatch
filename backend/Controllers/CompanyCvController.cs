@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Security.Cryptography;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RigMatch.Api.Data;
@@ -9,12 +11,11 @@ using RigMatch.Api.Services;
 
 namespace RigMatch.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("company")]
 public class CompanyCvController : ControllerBase
 {
-    private const string CompanyHeaderName = "X-Company-Id";
-    private const string DefaultCompanyId = "rigmatch-demo-company";
     private const long MaxFileSizeBytes = 10 * 1024 * 1024;
     private const int SuggestedAliasPromotionThreshold = 3;
 
@@ -70,7 +71,11 @@ public class CompanyCvController : ControllerBase
             return validationError;
         }
 
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
         var storedFile = await SaveUploadedFileAsync(file!, cancellationToken);
         var fileHash = await ComputeFileHashAsync(storedFile.AbsolutePath, cancellationToken);
         await _diagnosticsLogger.LogAsync(
@@ -208,7 +213,11 @@ public class CompanyCvController : ControllerBase
             return BadRequest(new { message = "finalProfile is required." });
         }
 
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
 
         var record = await _dbContext.CvRecords
             .FirstOrDefaultAsync(r => r.Id == id && r.CompanyId == company.Id, cancellationToken);
@@ -232,7 +241,11 @@ public class CompanyCvController : ControllerBase
         [FromRoute] Guid id,
         CancellationToken cancellationToken)
     {
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
 
         var record = await _dbContext.CvRecords
             .FirstOrDefaultAsync(r => r.Id == id && r.CompanyId == company.Id, cancellationToken);
@@ -266,7 +279,11 @@ public class CompanyCvController : ControllerBase
     [HttpGet("cvs")]
     public async Task<ActionResult<IReadOnlyList<CompanyCvListItem>>> ListCompanyCvs(CancellationToken cancellationToken)
     {
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
 
         var list = await BuildCompanyCvListAsync(company.Id, null, null, null, null, null, cancellationToken);
 
@@ -283,7 +300,11 @@ public class CompanyCvController : ControllerBase
         [FromQuery] bool? needsReview,
         CancellationToken cancellationToken)
     {
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
         var educationFilter = !string.IsNullOrWhiteSpace(education) ? education : location;
         var list = await BuildCompanyCvListAsync(company.Id, q, minExp, educationFilter, cert, needsReview, cancellationToken);
         return Ok(list);
@@ -301,7 +322,11 @@ public class CompanyCvController : ControllerBase
         [FromRoute] Guid id,
         CancellationToken cancellationToken)
     {
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
         var record = await _dbContext.CvRecords
             .FirstOrDefaultAsync(r => r.Id == id && r.CompanyId == company.Id, cancellationToken);
 
@@ -311,7 +336,7 @@ public class CompanyCvController : ControllerBase
         }
 
         var structuredJson = record.FinalJson ?? record.ParsedDraftJson;
-        var downloadUrl = $"/company/cv/{record.Id}/download?companyId={Uri.EscapeDataString(company.ExternalId)}";
+        var downloadUrl = $"/company/cv/{record.Id}/download";
 
         return Ok(new CompanyCvDetailResponse(
             record.Id,
@@ -328,7 +353,11 @@ public class CompanyCvController : ControllerBase
         [FromRoute] Guid id,
         CancellationToken cancellationToken)
     {
-        var company = await GetOrCreateCompanyAsync(cancellationToken);
+        var company = await GetAuthenticatedCompanyAsync(cancellationToken);
+        if (company is null)
+        {
+            return Unauthorized(new { message = "Authentication required." });
+        }
         var record = await _dbContext.CvRecords
             .FirstOrDefaultAsync(r => r.Id == id && r.CompanyId == company.Id, cancellationToken);
 
@@ -370,38 +399,16 @@ public class CompanyCvController : ControllerBase
         return null;
     }
 
-    private async Task<Company> GetOrCreateCompanyAsync(CancellationToken cancellationToken)
+    private async Task<Company?> GetAuthenticatedCompanyAsync(CancellationToken cancellationToken)
     {
-        var externalId = Request.Headers[CompanyHeaderName].FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(externalId))
+        var companyIdClaim = User.FindFirstValue("companyId");
+        if (!Guid.TryParse(companyIdClaim, out var companyId))
         {
-            externalId = Request.Query["companyId"].FirstOrDefault();
+            return null;
         }
 
-        if (string.IsNullOrWhiteSpace(externalId))
-        {
-            externalId = DefaultCompanyId;
-        }
-
-        var company = await _dbContext.Companies
-            .FirstOrDefaultAsync(c => c.ExternalId == externalId, cancellationToken);
-
-        if (company is not null)
-        {
-            return company;
-        }
-
-        company = new Company
-        {
-            Id = Guid.NewGuid(),
-            ExternalId = externalId,
-            Name = externalId,
-            CreatedAtUtc = DateTimeOffset.UtcNow
-        };
-
-        _dbContext.Companies.Add(company);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return company;
+        return await _dbContext.Companies
+            .FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
     }
 
     private async Task<StoredFileResult> SaveUploadedFileAsync(IFormFile file, CancellationToken cancellationToken)

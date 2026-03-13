@@ -1,0 +1,309 @@
+<div class="projects-shell">
+  <section *ngIf="view === 'library'" class="page-section">
+    <mat-card class="projects-header-card">
+      <mat-card-header>
+        <mat-card-title>Project Library</mat-card-title>
+        <mat-card-subtitle>Create structured project requirements and review ranked candidate matches.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-actions>
+        <button mat-flat-button color="primary" type="button" (click)="openCreate()">Create Project</button>
+        <button mat-button type="button" (click)="loadProjects()" [disabled]="isLoadingProjects">Refresh</button>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card class="table-card">
+      <mat-card-content>
+        <div class="loading-wrap" *ngIf="isLoadingProjects">
+          <mat-spinner diameter="36"></mat-spinner>
+        </div>
+
+        <table mat-table [dataSource]="projectList" class="project-table" *ngIf="!isLoadingProjects">
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Project Title</th>
+            <td mat-cell *matCellDef="let row">{{ row.title }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="primaryRole">
+            <th mat-header-cell *matHeaderCellDef>Primary Role</th>
+            <td mat-cell *matCellDef="let row">{{ row.primaryRole }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="location">
+            <th mat-header-cell *matHeaderCellDef>Location</th>
+            <td mat-cell *matCellDef="let row">{{ row.location || 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let row">{{ row.status }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="createdAtUtc">
+            <th mat-header-cell *matHeaderCellDef>Created</th>
+            <td mat-cell *matCellDef="let row">{{ row.createdAtUtc | date:'mediumDate' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let row" class="actions-cell">
+              <button mat-button type="button" (click)="viewProject(row)" [disabled]="isBusyAction">Open</button>
+              <button mat-button color="primary" type="button" (click)="editProject(row)" [disabled]="isBusyAction">Edit</button>
+              <button mat-button color="warn" type="button" (click)="deleteProject(row)" [disabled]="isBusyAction">Delete</button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <p class="empty-table" *ngIf="!isLoadingProjects && projectList.length === 0">
+          No projects created yet.
+        </p>
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <section *ngIf="view === 'form'" class="page-section">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>{{ projectFormMode === 'create' ? 'Create Project' : 'Edit Project' }}</mat-card-title>
+        <mat-card-subtitle>Define structured requirements first. Candidate matching is based on this profile, not only free text.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Project title</mat-label>
+            <input matInput [(ngModel)]="projectForm.title" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Client / company</mat-label>
+            <input matInput [(ngModel)]="projectForm.clientName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Primary standard role</mat-label>
+            <mat-select [(ngModel)]="projectForm.primaryRole">
+              <mat-option *ngFor="let role of standardRoles" [value]="role">{{ role }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Acceptable secondary roles</mat-label>
+            <mat-select [(ngModel)]="projectForm.additionalRoles" multiple>
+              <mat-option *ngFor="let role of standardRoles" [value]="role">{{ role }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Minimum experience years</mat-label>
+            <input matInput type="number" min="0" [(ngModel)]="projectForm.minimumExperienceYears" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select [(ngModel)]="projectForm.status">
+              <mat-option *ngFor="let status of projectStatuses" [value]="status">{{ status }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Location</mat-label>
+            <input matInput [(ngModel)]="projectForm.location" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Preferred education</mat-label>
+            <input matInput [(ngModel)]="projectForm.preferredEducation" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Start date</mat-label>
+            <input matInput type="date" [(ngModel)]="projectForm.startDate" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-grid form-grid-wide">
+          <mat-form-field appearance="outline">
+            <mat-label>Required skills (comma-separated)</mat-label>
+            <textarea matInput rows="3" [(ngModel)]="projectForm.requiredSkillsText"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Preferred skills (comma-separated)</mat-label>
+            <textarea matInput rows="3" [(ngModel)]="projectForm.preferredSkillsText"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Required certifications (comma-separated)</mat-label>
+            <textarea matInput rows="3" [(ngModel)]="projectForm.requiredCertificationsText"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Preferred certifications (comma-separated)</mat-label>
+            <textarea matInput rows="3" [(ngModel)]="projectForm.preferredCertificationsText"></textarea>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea matInput rows="6" [(ngModel)]="projectForm.description"></textarea>
+        </mat-form-field>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-flat-button color="primary" type="button" (click)="saveProject()" [disabled]="isSavingProject">
+          {{ isSavingProject ? 'Saving...' : 'Save Project' }}
+        </button>
+        <button mat-button type="button" (click)="cancelForm()" [disabled]="isSavingProject">Cancel</button>
+      </mat-card-actions>
+    </mat-card>
+  </section>
+
+  <section *ngIf="view === 'detail' && selectedProjectDetail as detail" class="page-section">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>{{ detail.title }}</mat-card-title>
+        <mat-card-subtitle>{{ detail.primaryRole }} | {{ detail.status }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-actions>
+        <button mat-flat-button color="primary" type="button" (click)="backToLibrary()">Back to Projects</button>
+        <button mat-button color="primary" type="button" (click)="editProject({ id: detail.id, title: detail.title, primaryRole: detail.primaryRole, location: detail.location, status: detail.status, createdAtUtc: detail.createdAtUtc, updatedAtUtc: detail.updatedAtUtc })">
+          Edit
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>Project Requirements</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="detail-grid">
+          <p><strong>Client:</strong> {{ detail.clientName || 'N/A' }}</p>
+          <p><strong>Primary role:</strong> {{ detail.primaryRole }}</p>
+          <p><strong>Additional roles:</strong> {{ detail.additionalRoles.length > 0 ? detail.additionalRoles.join(', ') : 'N/A' }}</p>
+          <p><strong>Minimum experience:</strong> {{ detail.minimumExperienceYears ?? 'N/A' }}</p>
+          <p><strong>Location:</strong> {{ detail.location || 'N/A' }}</p>
+          <p><strong>Preferred education:</strong> {{ detail.preferredEducation || 'N/A' }}</p>
+          <p><strong>Start date:</strong> {{ detail.startDateUtc ? (detail.startDateUtc | date:'mediumDate') : 'N/A' }}</p>
+          <p><strong>Created:</strong> {{ detail.createdAtUtc | date:'medium' }}</p>
+        </div>
+
+        <div class="requirements-grid">
+          <div>
+            <h4>Required Skills</h4>
+            <ul>
+              <li *ngFor="let item of detail.requiredSkills">{{ item }}</li>
+              <li *ngIf="detail.requiredSkills.length === 0">None</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Preferred Skills</h4>
+            <ul>
+              <li *ngFor="let item of detail.preferredSkills">{{ item }}</li>
+              <li *ngIf="detail.preferredSkills.length === 0">None</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Required Certifications</h4>
+            <ul>
+              <li *ngFor="let item of detail.requiredCertifications">{{ item }}</li>
+              <li *ngIf="detail.requiredCertifications.length === 0">None</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Preferred Certifications</h4>
+            <ul>
+              <li *ngFor="let item of detail.preferredCertifications">{{ item }}</li>
+              <li *ngIf="detail.preferredCertifications.length === 0">None</li>
+            </ul>
+          </div>
+        </div>
+
+        <p class="project-description"><strong>Description:</strong> {{ detail.description || 'N/A' }}</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="filters-card">
+      <mat-card-header>
+        <mat-card-title>Matching Candidates</mat-card-title>
+        <mat-card-subtitle>Only finalized CV profiles are ranked here.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="match-filter-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Minimum match score</mat-label>
+            <input matInput type="number" min="0" max="100" [(ngModel)]="projectMatchMinScore" />
+          </mat-form-field>
+          <mat-checkbox [(ngModel)]="projectMatchesRequireAllCerts">Has all required certifications</mat-checkbox>
+          <mat-checkbox [(ngModel)]="projectMatchesLocationOnly">Location match only</mat-checkbox>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="match-card-list" *ngIf="filteredMatches.length > 0; else noMatches">
+      <mat-card class="match-card" *ngFor="let match of filteredMatches">
+        <mat-card-header>
+          <mat-card-title>{{ match.candidateName }}</mat-card-title>
+          <mat-card-subtitle>{{ match.currentRole }} | Score {{ match.matchScore }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="match-meta">
+            <span class="match-badge">{{ getRoleMatchLabel(match) }}</span>
+            <span class="match-meta-item">Experience: {{ match.experienceYears }} years</span>
+            <span class="match-meta-item" [class.match-flag-ok]="match.meetsMinimumExperience">Min exp {{ match.meetsMinimumExperience ? 'met' : 'not met' }}</span>
+            <span class="match-meta-item" [class.match-flag-ok]="match.locationMatched">Location {{ match.locationMatched ? 'matched' : 'not matched' }}</span>
+          </div>
+
+          <div class="requirements-grid">
+            <div>
+              <h4>Matched Certifications</h4>
+              <ul>
+                <li *ngFor="let item of match.matchedRequiredCertifications">{{ item }}</li>
+                <li *ngFor="let item of match.matchedPreferredCertifications">{{ item }}</li>
+                <li *ngIf="match.matchedRequiredCertifications.length === 0 && match.matchedPreferredCertifications.length === 0">None</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Missing Required Certifications</h4>
+              <ul>
+                <li *ngFor="let item of match.missingRequiredCertifications">{{ item }}</li>
+                <li *ngIf="match.missingRequiredCertifications.length === 0">None</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Matched Skills</h4>
+              <ul>
+                <li *ngFor="let item of match.matchedRequiredSkills">{{ item }}</li>
+                <li *ngFor="let item of match.matchedPreferredSkills">{{ item }}</li>
+                <li *ngIf="match.matchedRequiredSkills.length === 0 && match.matchedPreferredSkills.length === 0">None</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Missing Required Skills</h4>
+              <ul>
+                <li *ngFor="let item of match.missingRequiredSkills">{{ item }}</li>
+                <li *ngIf="match.missingRequiredSkills.length === 0">None</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="summary-list">
+            <p *ngFor="let item of match.summaryPoints">{{ item }}</p>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-flat-button color="primary" type="button" (click)="openCandidate(match)">Open Candidate</button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <ng-template #noMatches>
+      <mat-card>
+        <mat-card-content>
+          <p>No finalized candidates match the current filters.</p>
+        </mat-card-content>
+      </mat-card>
+    </ng-template>
+  </section>
+</div>

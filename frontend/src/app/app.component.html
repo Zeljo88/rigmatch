@@ -1,5 +1,10 @@
+<ng-container *ngIf="authResolved; else authLoading">
+<ng-container *ngIf="authSession; else authScreen">
 <mat-toolbar color="primary" class="toolbar">
   <span class="brand">RigMatch</span>
+  <span class="spacer"></span>
+  <span class="toolbar-meta">{{ authSession.companyName }} | {{ authSession.fullName }}</span>
+  <button mat-button type="button" (click)="logout()">Logout</button>
 </mat-toolbar>
 
 <mat-sidenav-container class="shell">
@@ -7,6 +12,7 @@
     <div class="menu-title">Navigation</div>
     <button mat-button type="button" class="menu-item" (click)="setPage('upload')">Upload CV</button>
     <button mat-button type="button" class="menu-item" (click)="setPage('library')">CV Library</button>
+    <button mat-button type="button" class="menu-item" (click)="setPage('projects')">Projects</button>
     <button mat-button type="button" class="menu-item" (click)="setPage('settings')">Settings</button>
   </mat-sidenav>
 
@@ -150,6 +156,14 @@
 
         </section>
 
+        <section *ngIf="activePage === 'projects'" class="page-section">
+          <app-projects-page
+            [apiBaseUrl]="apiBaseUrl"
+            [active]="activePage === 'projects'"
+            (requestCandidateView)="openCandidateFromProject($event)">
+          </app-projects-page>
+        </section>
+
         <section *ngIf="activePage === 'candidateDetail' && selectedCvDetail as detail" class="page-section">
           <mat-card>
             <mat-card-header>
@@ -157,7 +171,7 @@
               <mat-card-subtitle>{{ detail.structuredProfile.name || 'Unknown candidate' }}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-actions>
-              <button mat-flat-button color="primary" type="button" (click)="backToLibrary()">Back to Library</button>
+              <button mat-flat-button color="primary" type="button" (click)="backToLibrary()">{{ candidateDetailBackLabel }}</button>
               <a mat-button [href]="apiBaseUrl + detail.downloadUrl" target="_blank" rel="noopener">Download PDF</a>
             </mat-card-actions>
           </mat-card>
@@ -263,3 +277,15 @@
     </main>
   </mat-sidenav-content>
 </mat-sidenav-container>
+</ng-container>
+</ng-container>
+
+<ng-template #authScreen>
+  <app-auth-page [apiBaseUrl]="apiBaseUrl" (authenticated)="onAuthenticated($event)"></app-auth-page>
+</ng-template>
+
+<ng-template #authLoading>
+  <main class="auth-loading">
+    <mat-spinner diameter="42"></mat-spinner>
+  </main>
+</ng-template>

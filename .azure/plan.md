@@ -1,16 +1,16 @@
 # Azure Deployment Plan
 
-> **Status:** Executing
+> **Status:** Ready for Validation
 
-Generated: 2026-03-05T00:00:00+01:00
+Generated: 2026-03-11T13:20:00+01:00
 
 ---
 
 ## 1. Project Overview
 
-**Goal:** Build Day 1-6 of RigMatch MVP with company focus: single CV upload, parsed edit/save flow, and company CV library listing.
+**Goal:** Add employer authentication to RigMatch so CVs and projects belong to authenticated employer users and their company instead of the development-only `X-Company-Id` header.
 
-**Path:** New Project
+**Path:** Add Components
 
 ---
 
@@ -21,8 +21,8 @@ Generated: 2026-03-05T00:00:00+01:00
 | Classification | Development |
 | Scale | Small |
 | Budget | Cost-Optimized |
-| **Subscription** | To be confirmed before Azure deployment |
-| **Location** | To be confirmed before Azure deployment |
+| **Subscription** | Existing Azure resources unchanged for this feature |
+| **Location** | Existing Azure resources unchanged for this feature |
 
 ---
 
@@ -30,38 +30,39 @@ Generated: 2026-03-05T00:00:00+01:00
 
 | Component | Type | Technology | Path |
 |-----------|------|------------|------|
-| backend | API | .NET Web API | `backend/` |
-| frontend | Frontend | Angular | `frontend/` |
+| RigMatch frontend | Frontend | Angular | `frontend/` |
+| RigMatch API | API | .NET 9 Web API | `backend/` |
+| SQLite data store | Database | SQLite | `backend/rigmatch.db` |
 
 ---
 
 ## 4. Recipe Selection
 
-**Selected:** AZD (Bicep)
+**Selected:** Existing local development workflow
 
-**Rationale:** New Azure-first multi-component app; simplest baseline path for later deployment stages.
+**Rationale:** This task adds application features only. Azure infrastructure, deployment topology, and service footprint remain unchanged.
 
 ---
 
 ## 5. Architecture
 
-**Stack:** App Service
+**Stack:** Local development app backed by Azure OpenAI for CV parsing
 
 ### Service Mapping
 
 | Component | Azure Service | SKU |
 |-----------|---------------|-----|
-| frontend | Azure App Service / Static Web Apps (TBD later) | Basic/Free during MVP |
-| backend | Azure App Service | Basic |
+| CV parsing | Azure OpenAI | Existing S0 deployment |
+| Employer projects | Existing API and frontend | Existing local app components |
+| Employer authentication | Existing API and frontend | JWT auth on top of .NET API and Angular app |
 
 ### Supporting Services
 
 | Service | Purpose |
 |---------|---------|
-| Log Analytics | Centralized logging |
-| Application Insights | Monitoring & APM |
-| Key Vault | Secrets management |
-| Managed Identity | Service-to-service auth |
+| SQLite | Development persistence |
+| Azure OpenAI | CV parsing and extraction |
+| JWT auth | Employer login/session enforcement |
 
 ---
 
@@ -70,35 +71,39 @@ Generated: 2026-03-05T00:00:00+01:00
 ### Phase 1: Planning
 - [x] Analyze workspace
 - [x] Gather requirements
-- [ ] Confirm subscription and location with user
+- [x] Confirm feature direction from user discussion
 - [x] Scan codebase
-- [x] Select recipe
+- [x] Select implementation approach
 - [x] Plan architecture
 - [x] **User approved this plan**
 
 ### Phase 2: Execution
-- [x] Research components (load references, invoke skills)
-- [ ] Generate infrastructure files (deferred to Azure prep stage)
-- [x] Generate application configuration
-- [ ] Generate Dockerfiles (if containerized, deferred)
-- [ ] Update plan status to "Ready for Validation"
+- [x] Add employer user persistence and auth configuration
+- [x] Add register/login/me API and JWT issuance
+- [x] Secure CV/project endpoints to use authenticated company context
+- [x] Add frontend login/register/session flow
+- [x] Remove dependency on `X-Company-Id` in normal app flow
+- [x] Update plan status to "Ready for Validation"
 
 ### Phase 3: Validation
-- [ ] Invoke azure-validate skill
-- [ ] All validation checks pass
-- [ ] Update plan status to "Validated"
-- [ ] Record validation proof below
+- [x] Build backend
+- [x] Build frontend
+- [x] Update validation proof
 
 ### Phase 4: Deployment
-- [ ] Invoke azure-deploy skill
-- [ ] Deployment successful
-- [ ] Update plan status to "Deployed"
+- [ ] Not part of this task
 
 ---
 
 ## 7. Validation Proof
 
-Pending.
+| Check | Command Run | Result | Timestamp |
+|-------|-------------|--------|-----------|
+| Backend build | `dotnet build backend/RigMatch.Api.csproj -p:OutDir=bin/verify/` | ✅ Pass | 2026-03-11 |
+| Frontend build | `npm run build` | ✅ Pass (bundle warning only) | 2026-03-11 |
+
+**Validated by:** local build verification
+**Validation timestamp:** 2026-03-11
 
 ---
 
@@ -106,15 +111,19 @@ Pending.
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `.azure/plan.md` | This plan | ✅ |
-| `backend/*` | API scaffold + CV upload endpoint | ✅ |
-| `frontend/*` | Angular scaffold + upload UI | ✅ |
+| `.azure/plan.md` | Feature plan | ✅ |
+| `.azure/plan.md` | Feature plan | ✅ |
+| `backend/Data/Entities/EmployerUser.cs` | Employer auth persistence | ✅ |
+| `backend/Controllers/AuthController.cs` | Auth API | ✅ |
+| `backend/Services/*` | JWT/session/auth helpers | ✅ |
+| `frontend/src/app/*` | Login/register/session UI | ✅ |
 
 ---
 
 ## 9. Next Steps
 
-> Current: Day 6 company CV library workflow complete, Day 7 polish and resilience next
+> Current: Validation
 
-1. Start Day 7 by adding loading/error polish and validation for company library workflow.
-2. Stabilize frontend runtime by aligning Node version with Angular support matrix.
+1. Restart backend so the new auth schema and JWT middleware are active.
+2. Register the first employer account in the frontend and test login, CV library, and projects.
+3. Replace the development signing key before any shared deployment.

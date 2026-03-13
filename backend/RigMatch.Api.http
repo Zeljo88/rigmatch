@@ -1,8 +1,33 @@
 @RigMatch.Api_HostAddress = http://localhost:5168
+@authToken = REPLACE_WITH_JWT
+
+### Auth: Register employer
+POST {{RigMatch.Api_HostAddress}}/auth/register
+Content-Type: application/json
+
+{
+  "companyName": "RigMatch Demo Company",
+  "fullName": "Demo Employer",
+  "email": "demo@rigmatch.local",
+  "password": "ChangeMe123"
+}
+
+### Auth: Login employer
+POST {{RigMatch.Api_HostAddress}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "demo@rigmatch.local",
+  "password": "ChangeMe123"
+}
+
+### Auth: Current employer
+GET {{RigMatch.Api_HostAddress}}/auth/me
+Authorization: Bearer {{authToken}}
 
 ### Company: Upload single CV (PDF) and parse draft
 POST {{RigMatch.Api_HostAddress}}/company/cv/upload
-X-Company-Id: rigmatch-demo-company
+Authorization: Bearer {{authToken}}
 Content-Type: multipart/form-data; boundary=RigMatchBoundary
 
 --RigMatchBoundary
@@ -14,7 +39,7 @@ Content-Type: application/pdf
 
 ### Company: Save final edited profile JSON
 POST {{RigMatch.Api_HostAddress}}/company/cv/{{cvId}}/save
-X-Company-Id: rigmatch-demo-company
+Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
@@ -48,8 +73,8 @@ Content-Type: application/json
 
 ### Company: List saved CVs
 GET {{RigMatch.Api_HostAddress}}/company/cvs
-X-Company-Id: rigmatch-demo-company
+Authorization: Bearer {{authToken}}
 
 ### Company: Delete CV record
 DELETE {{RigMatch.Api_HostAddress}}/company/cv/{{cvId}}
-X-Company-Id: rigmatch-demo-company
+Authorization: Bearer {{authToken}}

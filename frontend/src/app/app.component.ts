@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { AfterViewInit, Component, OnDestroy, ViewChild, inject } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -15,21 +15,27 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { AuthPageComponent } from './auth-page.component';
 import { ConfirmDialogComponent } from './confirm-dialog.component';
 import { CvEditDialogComponent } from './cv-edit-dialog.component';
+import { ProjectsPageComponent } from './projects-page.component';
+import { API_BASE_URL, AUTH_TOKEN_STORAGE_KEY } from './app.constants';
 import {
+  AuthResponse,
   CompanyCvDuplicateWarning,
   CompanyCvDetailResponse,
   CompanyCvDetailView,
   CompanyCvListItem,
   CompanyCvStructuredProfile,
   CompanyCvUploadResponse,
+  CurrentEmployerResponse,
   EditableCandidateProfile,
   ExperienceEntry,
   RoleExperienceEntry
 } from './cv-types';
 
-type Page = 'upload' | 'library' | 'settings' | 'candidateDetail';
+type Page = 'upload' | 'library' | 'projects' | 'settings' | 'candidateDetail';
+type CandidateReturnPage = 'library' | 'projects';
 
 @Component({
   selector: 'app-root',
@@ -49,24 +55,28 @@ type Page = 'upload' | 'library' | 'settings' | 'candidateDetail';
     MatDialogModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    AuthPageComponent,
+    ProjectsPageComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements AfterViewInit, OnDestroy {
+export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
-  readonly apiBaseUrl = 'http://localhost:5168';
-  readonly companyId = 'rigmatch-demo-company';
+  readonly apiBaseUrl = API_BASE_URL;
   readonly displayedColumns = ['name', 'latestTitle', 'highestEducation', 'experienceYears', 'createdAtUtc', 'actions'];
 
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
 
   activePage: Page = 'upload';
+  candidateDetailReturnPage: CandidateReturnPage = 'library';
+  authResolved = false;
+  authSession: AuthResponse | null = null;
 
   selectedFile: File | null = null;
   isUploading = false;
@@ -84,6 +94,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   dataSource = new MatTableDataSource<CompanyCvListItem>([]);
   private standardRolesCache: string[] = [];
   private uploadCooldownTimer: ReturnType<typeof setInterval> | null = null;
+
+  ngOnInit(): void {
+    this.restoreSession();
+  }
 
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator ?? null;
@@ -106,6 +120,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   setPage(page: Page): void {
+    if (!this.authSession) {
+      return;
+    }
+
     if (page === 'candidateDetail' && !this.selectedCvDetail) {
       return;
     }
@@ -122,6 +140,56 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.selectedFile = input.files?.[0] ?? null;
   }
 
+  onAuthenticated(session: AuthResponse): void {
+    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, session.token);
+    this.authSession = session;
+    this.authResolved = true;
+    this.selectedCvDetail = null;
+    this.activePage = 'upload';
+    this.loadLibrary();
+  }
+
+  logout(): void {
+    localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    this.authSession = null;
+    this.authResolved = true;
+    this.selectedCvDetail = null;
+    this.selectedFile = null;
+    this.dataSource.data = [];
+    this.activePage = 'upload';
+  }
+
+  private restoreSession(): void {
+    const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+    if (!token) {
+      this.authResolved = true;
+      return;
+    }
+
+    this.http
+      .get<CurrentEmployerResponse>(`${this.apiBaseUrl}/auth/me`)
+      .subscribe({
+        next: response => {
+          this.authSession = {
+            token,
+            expiresAtUtc: '',
+            userId: response.userId,
+            fullName: response.fullName,
+            email: response.email,
+            companyId: response.companyId,
+            companyName: response.companyName
+          };
+          this.authResolved = true;
+          this.loadLibrary();
+        },
+        error: () => {
+          localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+          this.authSession = null;
+          this.authResolved = true;
+        }
+      });
+  }
+
   uploadCv(): void {
     if (!this.selectedFile || this.isUploading || this.uploadCooldownRemainingSeconds > 0) {
       return;
@@ -133,9 +201,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.isUploading = true;
 
     this.http
-      .post<CompanyCvUploadResponse>(`${this.apiBaseUrl}/company/cv/upload`, formData, {
-        headers: { 'X-Company-Id': this.companyId }
-      })
+      .post<CompanyCvUploadResponse>(`${this.apiBaseUrl}/company/cv/upload`, formData)
       .subscribe({
         next: (response) => {
           this.isUploading = false;
@@ -201,7 +267,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
     this.http
       .get<CompanyCvListItem[]>(`${this.apiBaseUrl}${endpoint}`, {
-        headers: { 'X-Company-Id': this.companyId },
         params
       })
       .subscribe({
@@ -230,14 +295,21 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   viewCv(item: CompanyCvListItem): void {
+    this.openCandidateDetail(item.id, this.activePage === 'projects' ? 'projects' : 'library');
+  }
+
+  openCandidateFromProject(cvId: string): void {
+    this.openCandidateDetail(cvId, 'projects');
+  }
+
+  private openCandidateDetail(cvId: string, returnPage: CandidateReturnPage): void {
     this.isBusyAction = true;
     this.http
-      .get<CompanyCvDetailResponse>(`${this.apiBaseUrl}/company/cvs/${item.id}`, {
-        headers: { 'X-Company-Id': this.companyId }
-      })
+      .get<CompanyCvDetailResponse>(`${this.apiBaseUrl}/company/cvs/${cvId}`)
       .subscribe({
         next: (response) => {
           this.isBusyAction = false;
+          this.candidateDetailReturnPage = returnPage;
           this.selectedCvDetail = {
             id: response.id,
             fileUrl: response.fileUrl,
@@ -259,9 +331,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   editCv(item: CompanyCvListItem): void {
     this.isBusyAction = true;
     this.http
-      .get<CompanyCvDetailResponse>(`${this.apiBaseUrl}/company/cvs/${item.id}`, {
-        headers: { 'X-Company-Id': this.companyId }
-      })
+      .get<CompanyCvDetailResponse>(`${this.apiBaseUrl}/company/cvs/${item.id}`)
       .subscribe({
         next: (response) => {
           this.isBusyAction = false;
@@ -295,9 +365,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
       this.isBusyAction = true;
       this.http
-        .delete(`${this.apiBaseUrl}/company/cv/${item.id}`, {
-          headers: { 'X-Company-Id': this.companyId }
-        })
+        .delete(`${this.apiBaseUrl}/company/cv/${item.id}`)
         .subscribe({
           next: () => {
             this.isBusyAction = false;
@@ -322,11 +390,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   closeDetail(): void {
     this.selectedCvDetail = null;
-    this.setPage('library');
+    this.setPage(this.candidateDetailReturnPage);
   }
 
   backToLibrary(): void {
-    this.setPage('library');
+    this.setPage(this.candidateDetailReturnPage);
+  }
+
+  get candidateDetailBackLabel(): string {
+    return this.candidateDetailReturnPage === 'projects' ? 'Back to Projects' : 'Back to Library';
   }
 
   private openEditDialog(
@@ -360,9 +432,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.isBusyAction = true;
 
     this.http
-      .post(`${this.apiBaseUrl}/company/cv/${cvId}/save`, { finalProfile: profile }, {
-        headers: { 'X-Company-Id': this.companyId }
-      })
+      .post(`${this.apiBaseUrl}/company/cv/${cvId}/save`, { finalProfile: profile })
       .subscribe({
         next: () => {
           this.isBusyAction = false;
@@ -446,9 +516,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     }
 
     this.http
-      .get<string[]>(`${this.apiBaseUrl}/company/roles/standard`, {
-        headers: { 'X-Company-Id': this.companyId }
-      })
+      .get<string[]>(`${this.apiBaseUrl}/company/roles/standard`)
       .subscribe({
         next: roles => {
           this.standardRolesCache = roles;

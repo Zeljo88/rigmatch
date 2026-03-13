@@ -11,7 +11,11 @@ public class RigMatchDbContext : DbContext
 
     public DbSet<Company> Companies => Set<Company>();
 
+    public DbSet<EmployerUser> EmployerUsers => Set<EmployerUser>();
+
     public DbSet<CvRecord> CvRecords => Set<CvRecord>();
+
+    public DbSet<CompanyProject> CompanyProjects => Set<CompanyProject>();
 
     public DbSet<StandardRole> StandardRoles => Set<StandardRole>();
 
@@ -33,6 +37,28 @@ public class RigMatchDbContext : DbContext
             .Property(c => c.Name)
             .HasMaxLength(200);
 
+        modelBuilder.Entity<EmployerUser>()
+            .HasIndex(user => user.EmailNormalized)
+            .IsUnique();
+
+        modelBuilder.Entity<EmployerUser>()
+            .Property(user => user.FullName)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<EmployerUser>()
+            .Property(user => user.Email)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<EmployerUser>()
+            .Property(user => user.EmailNormalized)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<EmployerUser>()
+            .HasOne(user => user.Company)
+            .WithMany(company => company.Users)
+            .HasForeignKey(user => user.CompanyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<CvRecord>()
             .Property(c => c.FileUrl)
             .HasMaxLength(500);
@@ -48,6 +74,39 @@ public class RigMatchDbContext : DbContext
             .HasOne(c => c.Company)
             .WithMany(c => c.CvRecords)
             .HasForeignKey(c => c.CompanyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.Title)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.ClientName)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.PrimaryRole)
+            .HasMaxLength(150);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.Location)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.PreferredEducation)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<CompanyProject>()
+            .Property(project => project.Status)
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<CompanyProject>()
+            .HasIndex(project => project.CompanyId);
+
+        modelBuilder.Entity<CompanyProject>()
+            .HasOne(project => project.Company)
+            .WithMany(company => company.Projects)
+            .HasForeignKey(project => project.CompanyId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<StandardRole>()
