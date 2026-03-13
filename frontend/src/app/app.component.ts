@@ -68,7 +68,7 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
 
   readonly apiBaseUrl = API_BASE_URL;
-  readonly displayedColumns = ['name', 'latestTitle', 'highestEducation', 'experienceYears', 'createdAtUtc', 'actions'];
+  readonly displayedColumns = ['name', 'latestTitle', 'status', 'highestEducation', 'experienceYears', 'createdAtUtc', 'actions'];
 
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
@@ -314,6 +314,9 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
             id: response.id,
             fileUrl: response.fileUrl,
             isFinalized: response.isFinalized,
+            hasNeedsReview: response.hasNeedsReview,
+            isMatchReady: response.isMatchReady,
+            reviewStatus: response.reviewStatus,
             createdAtUtc: response.createdAtUtc,
             updatedAtUtc: response.updatedAtUtc,
             downloadUrl: response.downloadUrl,
@@ -435,6 +438,30 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
     return this.candidateDetailReturnPage === 'projects' ? 'Back to Projects' : 'Back to Library';
   }
 
+  getReviewStatusLabel(status?: string | null): string {
+    switch ((status ?? '').toLowerCase()) {
+      case 'match-ready':
+        return 'Match Ready';
+      case 'needs-review':
+        return 'Needs Review';
+      case 'draft':
+      default:
+        return 'Draft';
+    }
+  }
+
+  getReviewStatusClass(status?: string | null): string {
+    switch ((status ?? '').toLowerCase()) {
+      case 'match-ready':
+        return 'status-chip status-chip-ready';
+      case 'needs-review':
+        return 'status-chip status-chip-review';
+      case 'draft':
+      default:
+        return 'status-chip status-chip-draft';
+    }
+  }
+
   private openEditDialog(
     cvId: string,
     fileUrl: string,
@@ -475,6 +502,7 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
           this.loadLibrary();
 
           if (this.selectedCvDetail?.id === cvId) {
+            const hasNeedsReview = profile.experiences.some(exp => !!exp.needsReview);
             this.selectedCvDetail = {
               ...this.selectedCvDetail,
               structuredProfile: {
@@ -483,6 +511,9 @@ export class AppComponent implements AfterViewInit, OnInit, OnDestroy {
                 roleExperience: this.buildRoleExperience(profile.experiences)
               },
               isFinalized: true,
+              hasNeedsReview,
+              isMatchReady: !hasNeedsReview,
+              reviewStatus: hasNeedsReview ? 'needs-review' : 'match-ready',
               updatedAtUtc: new Date().toISOString()
             };
           }

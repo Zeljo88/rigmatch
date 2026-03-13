@@ -84,6 +84,9 @@ export type CompanyCvListItem = {
   experienceYears: number | null;
   createdAtUtc: string;
   isFinalized: boolean;
+  hasNeedsReview: boolean;
+  isMatchReady: boolean;
+  reviewStatus: string;
 };
 
 export type CompanyCvDetailResponse = {
@@ -91,6 +94,9 @@ export type CompanyCvDetailResponse = {
   fileUrl: string;
   structuredProfileJson: string;
   isFinalized: boolean;
+  hasNeedsReview: boolean;
+  isMatchReady: boolean;
+  reviewStatus: string;
   createdAtUtc: string;
   updatedAtUtc: string | null;
   downloadUrl: string;
@@ -100,6 +106,9 @@ export type CompanyCvDetailView = {
   id: string;
   fileUrl: string;
   isFinalized: boolean;
+  hasNeedsReview: boolean;
+  isMatchReady: boolean;
+  reviewStatus: string;
   createdAtUtc: string;
   updatedAtUtc: string | null;
   downloadUrl: string;

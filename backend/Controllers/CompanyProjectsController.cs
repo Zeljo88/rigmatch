@@ -172,11 +172,15 @@ public class CompanyProjectsController : ControllerBase
         CompanyProject project,
         CancellationToken cancellationToken)
     {
-        var finalizedCandidates = await _dbContext.CvRecords
+        var savedCandidates = await _dbContext.CvRecords
             .Where(record => record.CompanyId == project.CompanyId && record.FinalJson != null && record.FinalJson != string.Empty)
             .ToArrayAsync(cancellationToken);
 
-        var matches = _projectMatchingService.MatchCandidates(project, finalizedCandidates);
+        var matchReadyCandidates = savedCandidates
+            .Where(record => CvReviewStatusEvaluator.Evaluate(record).IsMatchReady)
+            .ToArray();
+
+        var matches = _projectMatchingService.MatchCandidates(project, matchReadyCandidates);
 
         return new CompanyProjectDetailResponse(
             project.Id,
