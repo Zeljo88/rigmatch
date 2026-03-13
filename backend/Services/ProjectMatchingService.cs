@@ -71,6 +71,12 @@ public class ProjectMatchingService : IProjectMatchingService
                 }
             }
 
+            var requiresRoleMatch = primaryRole.Length > 0 || additionalRoles.Count > 0;
+            if (requiresRoleMatch && roleMatchType == "none")
+            {
+                continue;
+            }
+
             var matchedRequiredCertifications = MatchTerms(requiredCertifications, profile.Certifications);
             var missingRequiredCertifications = ExceptTerms(requiredCertifications, matchedRequiredCertifications);
             if (requiredCertifications.Count > 0)

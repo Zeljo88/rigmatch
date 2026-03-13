@@ -317,8 +317,7 @@ public class CompanyCvController : ControllerBase
         {
             return Unauthorized(new { message = "Authentication required." });
         }
-        var educationFilter = !string.IsNullOrWhiteSpace(education) ? education : location;
-        var list = await BuildCompanyCvListAsync(company.Id, q, minExp, educationFilter, cert, needsReview, cancellationToken);
+        var list = await BuildCompanyCvListAsync(company.Id, q, minExp, education, cert, needsReview, cancellationToken);
         return Ok(list);
     }
 
