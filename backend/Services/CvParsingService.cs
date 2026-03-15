@@ -431,13 +431,18 @@ public sealed class CvParsingService : ICvParsingService
         var totalExperienceYears = experiences.Count > 0
             ? RoleExperienceCalculator.CalculateTotalYears(experiences)
             : (int)Math.Round(Math.Max(payload.ExperienceYears ?? 0d, 0d), MidpointRounding.AwayFromZero);
+        var jobTitles = experiences
+            .Select(exp => exp.RawRoleTitle)
+            .Where(title => !string.IsNullOrWhiteSpace(title))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
         return new ParsedCandidateProfile(
             payload.Name?.Trim() ?? string.Empty,
             payload.Email?.Trim() ?? string.Empty,
             payload.PhoneNumber?.Trim() ?? string.Empty,
             payload.HighestEducation?.Trim() ?? string.Empty,
-            await NormalizeRoleListAsync(null, experiences, cancellationToken),
+            jobTitles,
             NormalizeCompanies(experiences),
             NormalizeList(payload.Skills),
             NormalizeList(payload.Certifications),
@@ -482,9 +487,7 @@ public sealed class CvParsingService : ICvParsingService
                 $"source=parse rawRole={BuildPreview(roleForMatching ?? string.Empty)} standardRole={match.StandardRoleName} strategy={match.MatchStrategy} confidence={match.MatchConfidence:0.00} needsReview={match.NeedsReview} details={match.MatchDetails}",
                 cancellationToken);
 
-            var rawRoleTitle = !string.IsNullOrWhiteSpace(cleaned.Role)
-                ? cleaned.Role
-                : match.StandardRoleName;
+            var rawRoleTitle = ResolvePreferredRawRoleTitle(cleaned.Role, cleaned.Description, match.StandardRoleName);
             var normalizedItem = new ParsedExperienceEntry(
                 cleaned.CompanyName,
                 rawRoleTitle,
@@ -520,14 +523,31 @@ public sealed class CvParsingService : ICvParsingService
         IReadOnlyList<ParsedExperienceEntry> normalizedExperiences,
         CancellationToken cancellationToken)
     {
-        var direct = await _roleStandardizationService.StandardizeRoleListAsync(rolesFromModel, cancellationToken);
-        if (direct.Count > 0)
+        var directRaw = NormalizeList(rolesFromModel);
+        if (directRaw.Count > 0)
         {
-            return direct;
+            return directRaw;
+        }
+
+        var standardizedInput = await _roleStandardizationService.StandardizeRoleListAsync(rolesFromModel, cancellationToken);
+        if (standardizedInput.Count > 0)
+        {
+            return standardizedInput;
+        }
+
+        var rawTitles = normalizedExperiences
+            .Select(exp => exp.RawRoleTitle)
+            .Where(role => !string.IsNullOrWhiteSpace(role))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (rawTitles.Length > 0)
+        {
+            return rawTitles;
         }
 
         return normalizedExperiences
-            .Select(exp => !string.IsNullOrWhiteSpace(exp.StandardRoleName) ? exp.StandardRoleName : exp.RawRoleTitle)
+            .Select(exp => exp.StandardRoleName)
             .Where(role => !string.IsNullOrWhiteSpace(role))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -961,12 +981,22 @@ public sealed class CvParsingService : ICvParsingService
         role = StripDateNoise(role);
         company = StripDateNoise(company);
 
+        var normalizedRole = NormalizeShoutyText(role);
+        var normalizedCompany = NormalizeShoutyText(company);
+        var normalizedDescription = NormalizeShoutyText(description);
+
+        if (TryRescueRoleCompanyCollision(normalizedRole, normalizedCompany, normalizedDescription) is { } rescued)
+        {
+            normalizedRole = rescued.Role;
+            normalizedCompany = rescued.Company;
+        }
+
         return (
-            NormalizeShoutyText(company),
-            NormalizeShoutyText(role),
+            normalizedCompany,
+            normalizedRole,
             startDate,
             endDate,
-            NormalizeShoutyText(description));
+            normalizedDescription);
     }
 
     private static string CleanExperienceField(string? value, int maxLength = 120)
@@ -1062,6 +1092,118 @@ public sealed class CvParsingService : ICvParsingService
         return RoleSignalTokens.Any(token => lower.Contains(token, StringComparison.Ordinal));
     }
 
+    private static string ResolvePreferredRawRoleTitle(string role, string description, string standardRoleName)
+    {
+        var cleanedRole = CleanExperienceField(role);
+        var cleanedDescription = CleanExperienceField(description);
+        var cleanedStandardRole = CleanExperienceField(standardRoleName);
+
+        if (!string.IsNullOrWhiteSpace(cleanedDescription) && LooksLikeStandaloneRoleTitle(cleanedDescription))
+        {
+            if (string.IsNullOrWhiteSpace(cleanedRole))
+            {
+                return NormalizeShoutyText(cleanedDescription);
+            }
+
+            if (cleanedDescription.Contains(cleanedRole, StringComparison.OrdinalIgnoreCase) &&
+                cleanedDescription.Length > cleanedRole.Length)
+            {
+                return NormalizeShoutyText(cleanedDescription);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(cleanedRole))
+        {
+            return NormalizeShoutyText(cleanedRole);
+        }
+
+        if (!string.IsNullOrWhiteSpace(cleanedDescription) && LooksLikeStandaloneRoleTitle(cleanedDescription))
+        {
+            return NormalizeShoutyText(cleanedDescription);
+        }
+
+        return NormalizeShoutyText(cleanedStandardRole);
+    }
+
+    private static bool LooksLikeStandaloneRoleTitle(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        if (value.Length > 80)
+        {
+            return false;
+        }
+
+        if (Regex.IsMatch(value, @"[.;:]"))
+        {
+            return false;
+        }
+
+        return LooksLikeRoleText(value);
+    }
+
+    private static (string Role, string Company)? TryRescueRoleCompanyCollision(string role, string company, string description)
+    {
+        if (string.IsNullOrWhiteSpace(role) || string.IsNullOrWhiteSpace(company))
+        {
+            return null;
+        }
+
+        if (!LooksLikeRoleText(company))
+        {
+            return null;
+        }
+
+        var inferredFromDescription = InferRoleFromDescription(description);
+        var mergedCompany = ExtractCompanyFromMergedRole(role);
+        if (string.IsNullOrWhiteSpace(mergedCompany))
+        {
+            return null;
+        }
+
+        var rescuedRole = company;
+        if (!string.IsNullOrWhiteSpace(inferredFromDescription) &&
+            !rescuedRole.Contains(inferredFromDescription, StringComparison.OrdinalIgnoreCase) &&
+            !inferredFromDescription.Contains(rescuedRole, StringComparison.OrdinalIgnoreCase))
+        {
+            rescuedRole = inferredFromDescription;
+        }
+
+        return (NormalizeShoutyText(rescuedRole), NormalizeShoutyText(mergedCompany));
+    }
+
+    private static string ExtractCompanyFromMergedRole(string role)
+    {
+        if (string.IsNullOrWhiteSpace(role) || role.Contains(' '))
+        {
+            return string.Empty;
+        }
+
+        var compact = Regex.Replace(role, @"[^A-Za-z0-9&]+", string.Empty);
+        if (compact.Length < 8)
+        {
+            return string.Empty;
+        }
+
+        foreach (var prefix in new[] { "TECH", "ENG", "ENGINEER", "SUPERVISOR", "MANAGER", "OPERATOR", "HELPER", "LEAD" })
+        {
+            if (compact.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && compact.Length > prefix.Length + 3)
+            {
+                return compact[prefix.Length..];
+            }
+
+            if (compact.EndsWith(prefix, StringComparison.OrdinalIgnoreCase) && compact.Length > prefix.Length + 3)
+            {
+                return compact[..^prefix.Length];
+            }
+        }
+
+        return string.Empty;
+    }
+
     private static string InferRoleFromDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
@@ -1070,6 +1212,16 @@ public sealed class CvParsingService : ICvParsingService
         }
 
         var lower = description.ToLowerInvariant();
+        if ((lower.Contains("electrical") && lower.Contains("technician")) || lower.Contains("e&i tech") || lower.Contains("e and i tech"))
+        {
+            return "Electrical Technician";
+        }
+
+        if (lower.Contains("electrical") && lower.Contains("helper"))
+        {
+            return "Electrical Helper";
+        }
+
         if (lower.Contains("reservoir") || lower.Contains("history matching") || lower.Contains("material balance"))
         {
             return "Reservoir Engineer";
