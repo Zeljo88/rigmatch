@@ -31,12 +31,14 @@ Set these in GitHub `Settings -> Secrets and variables -> Actions -> Variables`:
 - `AZURE_STATIC_WEB_APP_LOCATION`
 - `RIGMATCH_NAME_PREFIX`
 - `POSTGRES_ADMIN_USERNAME`
+- `POSTGRES_DATABASE_NAME` (optional, defaults to `rigmatch`)
 - `AZURE_OPENAI_DEPLOYMENT_NAME`
+- `AZURE_INFRA_DEPLOYMENT_NAME` (optional, defaults to `main`)
 
 Recommended:
 
 - `AZURE_LOCATION=swedencentral`
-- `AZURE_STATIC_WEB_APP_LOCATION=swedencentral` if supported in your subscription, otherwise use the nearest supported Static Web Apps region
+- `AZURE_STATIC_WEB_APP_LOCATION=westeurope` for this subscription (Static Web Apps is not available in `swedencentral`)
 
 ## GitHub repository secrets
 
@@ -64,22 +66,31 @@ Minimum practical role for the first setup:
 
 ## Deployment order
 
-The workflow in `.github/workflows/deploy-azure.yml` does this:
+Use two workflows:
+
+1. `.github/workflows/deploy-infra-azure.yml` (manual `workflow_dispatch`)
+2. `.github/workflows/deploy-azure.yml` (app deploy on `master` push/merge)
+
+Run order:
+
+1. Run `deploy-infra-azure.yml` once (or whenever infra changes)
+2. Merge to `master` to run `deploy-azure.yml` for API/frontend deployment
+
+`deploy-azure.yml` does this:
 
 1. Login to Azure with OIDC
-2. Create or update the resource group
-3. Deploy infrastructure from `infra/main.bicep`
-4. Configure API app settings
-5. Publish and deploy the .NET API
-6. Build the Angular frontend with the deployed API URL
-7. Fetch the Static Web Apps deployment token
-8. Upload the frontend build to Static Web Apps
+2. Read outputs from the last infra deployment
+3. Configure API app settings
+4. Publish and deploy the .NET API
+5. Build the Angular frontend with the deployed API URL
+6. Fetch the Static Web Apps deployment token
+7. Upload the frontend build to Static Web Apps
 
 ## Workflow trigger
 
-Deployment runs automatically on every push to `master` (including PR merges into `master`).
+App deployment runs automatically on every push to `master` (including PR merges into `master`).
 
-You can also run it manually from GitHub Actions using `workflow_dispatch`.
+Infrastructure deployment runs manually from GitHub Actions using `workflow_dispatch` in `deploy-infra-azure.yml`.
 
 ## Manual checks after first deployment
 
