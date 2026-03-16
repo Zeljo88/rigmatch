@@ -9,4 +9,6 @@ public sealed class CvParsingOptions
     public string ApiVersion { get; set; } = "2024-10-21";
     public int MaxTextChars { get; set; } = 12_000;
     public int MaxCompletionTokens { get; set; } = 1000;
+    public int MaxExperienceHintChars { get; set; } = 1200;
+    public int MaxExperienceHintSnippetChars { get; set; } = 180;
 }

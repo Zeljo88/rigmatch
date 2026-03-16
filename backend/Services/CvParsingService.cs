@@ -182,10 +182,14 @@ public sealed class CvParsingService : ICvParsingService
         var options = _options.Value;
         var normalizedText = PrepareCvText(cvText, options.MaxTextChars);
         var referenceBlock = await _parsingReferenceService.BuildPromptReferenceBlockAsync(normalizedText, cancellationToken);
-        var experienceHintBlock = BuildExperienceHintBlock(cvText);
+        var experienceHintBlock = BuildExperienceHintBlock(
+            cvText,
+            options.MaxExperienceHintChars,
+            options.MaxExperienceHintSnippetChars);
+        var promptChars = normalizedText.Length + referenceBlock.Length + experienceHintBlock.Length;
         await _diagnosticsLogger.LogAsync(
             "parser.prepare",
-            $"rawChars={cvText.Length} preparedChars={normalizedText.Length} referenceChars={referenceBlock.Length} experienceHintChars={experienceHintBlock.Length} maxTextChars={options.MaxTextChars} maxCompletionTokens={options.MaxCompletionTokens}",
+            $"rawChars={cvText.Length} preparedChars={normalizedText.Length} referenceChars={referenceBlock.Length} experienceHintChars={experienceHintBlock.Length} promptChars={promptChars} maxTextChars={options.MaxTextChars} maxCompletionTokens={options.MaxCompletionTokens} maxExperienceHintChars={options.MaxExperienceHintChars}",
             cancellationToken);
 
         if (_environment.IsDevelopment() && options.UseMockInDevelopment)
@@ -380,6 +384,18 @@ public sealed class CvParsingService : ICvParsingService
         {
             throw new InvalidOperationException(
                 "CV parsing is not configured. Set CvParsing:Endpoint, CvParsing:ApiKey, and CvParsing:DeploymentName.");
+        }
+
+        if (options.MaxTextChars <= 0 || options.MaxCompletionTokens <= 0)
+        {
+            throw new InvalidOperationException(
+                "CV parsing limits are invalid. Set CvParsing:MaxTextChars and CvParsing:MaxCompletionTokens to positive numbers.");
+        }
+
+        if (options.MaxExperienceHintChars < 0 || options.MaxExperienceHintSnippetChars < 0)
+        {
+            throw new InvalidOperationException(
+                "CV parsing hint limits are invalid. Set CvParsing:MaxExperienceHintChars and CvParsing:MaxExperienceHintSnippetChars to zero or positive numbers.");
         }
     }
 
@@ -1102,9 +1118,9 @@ public sealed class CvParsingService : ICvParsingService
         return text[..maxTextChars];
     }
 
-    private static string BuildExperienceHintBlock(string rawText)
+    private static string BuildExperienceHintBlock(string rawText, int maxHintChars, int maxSnippetChars)
     {
-        if (string.IsNullOrWhiteSpace(rawText))
+        if (string.IsNullOrWhiteSpace(rawText) || maxHintChars <= 0 || maxSnippetChars <= 0)
         {
             return string.Empty;
         }
@@ -1142,12 +1158,17 @@ public sealed class CvParsingService : ICvParsingService
             }
 
             var snippet = string.Join(" | ", window);
+            if (snippet.Length > maxSnippetChars)
+            {
+                snippet = snippet[..maxSnippetChars].Trim();
+            }
+
             if (seen.Add(snippet))
             {
                 snippets.Add(snippet);
             }
 
-            if (snippets.Count == 18)
+            if (snippets.Count == 10)
             {
                 break;
             }
@@ -1159,10 +1180,23 @@ public sealed class CvParsingService : ICvParsingService
         }
 
         var builder = new StringBuilder();
-        builder.AppendLine("Possible chronology hints from the CV text (use to preserve role/company boundaries when explicit):");
+        builder.AppendLine("Possible chronology hints from the CV text (use only when clearly supported):");
+        var appended = 0;
         foreach (var snippet in snippets)
         {
-            builder.Append("- ").AppendLine(snippet);
+            var line = $"- {snippet}{Environment.NewLine}";
+            if (builder.Length + line.Length > maxHintChars)
+            {
+                break;
+            }
+
+            builder.Append(line);
+            appended++;
+        }
+
+        if (appended == 0)
+        {
+            return string.Empty;
         }
 
         return builder.ToString().Trim();
