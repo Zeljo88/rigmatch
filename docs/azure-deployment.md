@@ -75,6 +75,12 @@ The workflow in `.github/workflows/deploy-azure.yml` does this:
 7. Fetch the Static Web Apps deployment token
 8. Upload the frontend build to Static Web Apps
 
+## Workflow trigger
+
+Deployment runs automatically on every push to `master` (including PR merges into `master`).
+
+You can also run it manually from GitHub Actions using `workflow_dispatch`.
+
 ## Manual checks after first deployment
 
 1. Open `https://<api-host>/health`
