@@ -1,6 +1,9 @@
 name: Deploy RigMatch to Azure
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
