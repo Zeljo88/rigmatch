@@ -144,7 +144,28 @@ jobs:
             --resource-group "$AZURE_RESOURCE_GROUP" \
             --name "${{ steps.infra.outputs.web_app_name }}" \
             --src-path backend-api.zip \
-            --type zip
+            --type zip \
+            --async true
+
+      - name: Wait for API health endpoint
+        shell: bash
+        run: |
+          api_health_url="${{ steps.infra.outputs.web_app_url }}/health"
+
+          for attempt in $(seq 1 36); do
+            status_code="$(curl -s -o /dev/null -w "%{http_code}" "$api_health_url" || true)"
+
+            if [ "$status_code" = "200" ]; then
+              echo "API is healthy at $api_health_url"
+              exit 0
+            fi
+
+            echo "Attempt $attempt/36: health check returned HTTP $status_code"
+            sleep 10
+          done
+
+          echo "API did not become healthy within 6 minutes: $api_health_url"
+          exit 1
 
       - name: Install frontend dependencies
         working-directory: frontend
