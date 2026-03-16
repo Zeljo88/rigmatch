@@ -21,3 +21,11 @@ backend/*.db-wal
 
 # Local tooling
 .vscode/
+
+# Generated evaluation artifacts
+/evaluation/cvs/
+/evaluation/pdfs/
+/evaluation/generated/markdown/
+/evaluation/generated/benchmark-report.md
+/evaluation/generated/benchmark-results.json
+/evaluation/generated/cv-plan.json

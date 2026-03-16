@@ -1,0 +1,342 @@
+[
+  {
+    "id": "CV01",
+    "name": "Martin Reeve",
+    "location": "Aberdeen, UK",
+    "title": "Production Operator",
+    "variant": "clean",
+    "language": "en",
+    "education": "HNC Process Operations",
+    "certifications": ["BOSIET", "MIST", "OPITO FOET"],
+    "skills": ["Production operations", "Gas compression", "Permit to Work", "Well testing", "Safety isolation"],
+    "summary": "Mid-level offshore Production Operator with 9 years on North Sea assets, experienced in shutdown support and gas lift systems.",
+    "roles": [
+      ["Senior Production Operator", "Harbor Energy", "2021-03", "Present"],
+      ["Production Operator", "Petrofac", "2017-01", "2021-02"],
+      ["Process Technician", "EnQuest", "2015-06", "2016-12"]
+    ]
+  },
+  {
+    "id": "CV02",
+    "name": "Leila Mercer",
+    "location": "Dubai, UAE",
+    "title": "Senior Drilling Supervisor",
+    "variant": "clean",
+    "language": "en",
+    "education": "BEng Petroleum Engineering",
+    "certifications": ["IWCF Level 4", "BOSIET", "H2S"],
+    "skills": ["Drilling supervision", "Well control", "Jack-up operations", "HPHT wells", "Contractor management"],
+    "summary": "Senior drilling leader with 18+ years across onshore and offshore campaigns in the Gulf and North Africa.",
+    "roles": [
+      ["Senior Drilling Supervisor", "ADNOC Drilling", "2019-07", "Present"],
+      ["Drilling Superintendent", "Shelf Drilling", "2014-01", "2019-06"],
+      ["Night Drilling Supervisor", "KCA Deutag", "2009-04", "2013-12"]
+    ]
+  },
+  {
+    "id": "CV03",
+    "name": "Owen Hartley",
+    "location": "Stavanger, Norway",
+    "title": "HSE Advisor",
+    "variant": "two-column",
+    "language": "en",
+    "education": "NEBOSH Diploma",
+    "certifications": ["NEBOSH", "IOSH Managing Safely", "BOSIET"],
+    "skills": ["HSE audits", "Incident investigation", "Behavioral safety", "ISO 45001", "Permit compliance"],
+    "summary": "Offshore HSE Advisor supporting brownfield and drilling campaigns, with strong audit and incident-learning background.",
+    "roles": [
+      ["Lead HSE Advisor", "Aker BP", "2022-01", "Present"],
+      ["HSE Advisor", "Transocean", "2018-08", "2021-12"],
+      ["Safety Coach", "Maersk Drilling", "2015-02", "2018-07"]
+    ]
+  },
+  {
+    "id": "CV04",
+    "name": "Rami Solberg",
+    "location": "Muscat, Oman",
+    "title": "Wellsite Engineer",
+    "variant": "multilingual-ar-en",
+    "language": "ar-en",
+    "education": "BSc Mechanical Engineering",
+    "certifications": ["IWCF Level 3", "H2S", "Defensive Driving"],
+    "skills": ["Well intervention", "Coiled tubing", "Wireline", "Field reporting", "Pressure control"],
+    "summary": "Arabic/English field engineer with intervention and stimulation support experience on land rigs and production wells.",
+    "roles": [
+      ["Wellsite Engineer", "Petroleum Development Oman", "2021-05", "Present"],
+      ["Field Engineer", "Schlumberger", "2018-02", "2021-04"],
+      ["Mechanical Engineer", "Gulf Energy Services", "2016-06", "2018-01"]
+    ]
+  },
+  {
+    "id": "CV05",
+    "name": "Claire DuPont",
+    "location": "Pau, France",
+    "title": "Geologist",
+    "variant": "multilingual-fr-en",
+    "language": "fr-en",
+    "education": "Master Geosciences Appliquées",
+    "certifications": ["GWO Working at Heights", "First Aid"],
+    "skills": ["Seismic interpretation", "Reservoir characterization", "Petrel", "Well correlation", "Basin analysis"],
+    "summary": "Bilingual geologist with onshore and offshore subsurface studies experience focused on clastic reservoirs.",
+    "roles": [
+      ["Development Geologist", "TotalEnergies", "2020-09", "Present"],
+      ["Geoscientist", "Perenco", "2017-01", "2020-08"],
+      ["Junior Geologist", "CGG", "2015-04", "2016-12"]
+    ]
+  },
+  {
+    "id": "CV06",
+    "name": "Nadia Kerr",
+    "location": "Port Harcourt, Nigeria",
+    "title": "Roustabout",
+    "variant": "short",
+    "language": "en",
+    "education": "Secondary School Certificate",
+    "certifications": ["BOSIET", "Manual Handling"],
+    "skills": ["Deck operations", "Rig housekeeping", "Lifting assistance", "Tool handling"],
+    "summary": "Entry-level offshore worker with two years supporting deck and logistics teams.",
+    "roles": [
+      ["Roustabout", "Seplat Energy", "2023-02", "Present"],
+      ["Deck Assistant", "Local Marine Services", "2021-06", "2023-01"]
+    ]
+  },
+  {
+    "id": "CV07",
+    "name": "Bruno Leist",
+    "location": "Doha, Qatar",
+    "title": "Floorhand",
+    "variant": "short-messy",
+    "language": "en",
+    "education": "High School",
+    "certifications": ["BOSIET", "Rigging & Slinging"],
+    "skills": ["Pipe handling", "Mud system support", "Rig floor operations"],
+    "summary": "Floorhand with short drilling assignments and intermittent contract work.",
+    "roles": [
+      ["Floorhand", "Nabors", "2022", "Present"],
+      ["Roughneck", "KCA Deutag", "2020", "2022"]
+    ]
+  },
+  {
+    "id": "CV08",
+    "name": "Helen Adebayo",
+    "location": "Lagos, Nigeria",
+    "title": "Reservoir Engineer",
+    "variant": "long-senior",
+    "language": "en",
+    "education": "MSc Petroleum Engineering",
+    "certifications": ["SPE Courses", "PMP"],
+    "skills": ["Reservoir simulation", "Material balance", "Field development planning", "Eclipse", "Production forecasting"],
+    "summary": "Senior reservoir engineer with 22 years across deepwater and mature-field optimization programs.",
+    "roles": [
+      ["Principal Reservoir Engineer", "Chevron", "2018-03", "Present"],
+      ["Senior Reservoir Engineer", "TotalEnergies", "2011-01", "2018-02"],
+      ["Reservoir Engineer", "Shell", "2004-06", "2010-12"],
+      ["Graduate Engineer", "NNPC", "2001-08", "2004-05"]
+    ]
+  },
+  {
+    "id": "CV09",
+    "name": "Gavin Yule",
+    "location": "Houston, USA",
+    "title": "Operations Manager",
+    "variant": "long-senior",
+    "language": "en",
+    "education": "BSc Chemical Engineering",
+    "certifications": ["Lean Six Sigma Green Belt", "NEBOSH"],
+    "skills": ["Operations management", "Brownfield optimization", "Shutdown planning", "P&L ownership", "Asset integrity"],
+    "summary": "Operations leader with offshore production and onshore terminal management experience over 25 years.",
+    "roles": [
+      ["Operations Manager", "Occidental", "2019-02", "Present"],
+      ["Production Superintendent", "BP", "2013-01", "2019-01"],
+      ["Production Engineer", "ConocoPhillips", "2004-05", "2012-12"]
+    ]
+  },
+  {
+    "id": "CV10",
+    "name": "Erika Voss",
+    "location": "Esbjerg, Denmark",
+    "title": "Hydrocarbon Allocation Ninja",
+    "variant": "unusual-title",
+    "language": "en",
+    "education": "BSc Process Engineering",
+    "certifications": ["ISO 50001 Awareness"],
+    "skills": ["Allocation accounting", "Production metering", "Daily loss reporting", "Hydrocarbon accounting"],
+    "summary": "Commercial-operations specialist using unconventional titles for hydrocarbon accounting and allocation work.",
+    "roles": [
+      ["Hydrocarbon Allocation Ninja", "BlueNord", "2022-04", "Present"],
+      ["Production Allocation Analyst", "INEOS Energy", "2018-01", "2022-03"],
+      ["Metering Coordinator", "TotalEnergies", "2015-02", "2017-12"]
+    ]
+  },
+  {
+    "id": "CV11",
+    "name": "Samir Holt",
+    "location": "Abu Dhabi, UAE",
+    "title": "Integrity Champion",
+    "variant": "unusual-title",
+    "language": "en",
+    "education": "BEng Mechanical Engineering",
+    "certifications": ["API 580", "NACE Level 2"],
+    "skills": ["Asset integrity", "Corrosion management", "RBI", "Pressure systems", "Inspection planning"],
+    "summary": "Asset integrity engineer whose employer used internal branding rather than standard role names.",
+    "roles": [
+      ["Integrity Champion", "Borouge", "2021-01", "Present"],
+      ["Integrity Engineer", "Petrofac", "2017-03", "2020-12"],
+      ["Inspection Engineer", "ADNOC Gas", "2014-06", "2017-02"]
+    ]
+  },
+  {
+    "id": "CV12",
+    "name": "Victor Hale",
+    "location": "Perth, Australia",
+    "title": "Marine Offshore Mechanic",
+    "variant": "clean",
+    "language": "en",
+    "education": "Diploma of Engineering - Mechanical",
+    "certifications": ["BOSIET", "Confined Space", "Forklift"],
+    "skills": ["Rotating equipment", "Diesel engines", "Preventive maintenance", "Hydraulics", "CMMS"],
+    "summary": "Mechanical technician supporting offshore marine assets and production support vessels.",
+    "roles": [
+      ["Offshore Mechanic", "Woodside", "2020-08", "Present"],
+      ["Mechanical Fitter", "Santos", "2016-01", "2020-07"],
+      ["Maintenance Technician", "Toll Marine", "2013-02", "2015-12"]
+    ]
+  },
+  {
+    "id": "CV13",
+    "name": "Maya Foster",
+    "location": "Calgary, Canada",
+    "title": "Planner / Scheduler",
+    "variant": "table-heavy",
+    "language": "en",
+    "education": "Business Administration Diploma",
+    "certifications": ["Primavera P6", "SAP PM"],
+    "skills": ["Shutdown planning", "Maintenance scheduling", "Resource loading", "SAP", "Primavera"],
+    "summary": "Maintenance planner experienced in turnarounds and reliability planning for upstream and midstream assets.",
+    "roles": [
+      ["Senior Planner", "Suncor", "2021-11", "Present"],
+      ["Maintenance Scheduler", "Cenovus", "2018-05", "2021-10"],
+      ["Planner", "Enbridge", "2015-09", "2018-04"]
+    ]
+  },
+  {
+    "id": "CV14",
+    "name": "Tariq Mendez",
+    "location": "Basra, Iraq",
+    "title": "Field Service Specialist",
+    "variant": "ocr-like",
+    "language": "en",
+    "education": "BSc Electrical Engineering",
+    "certifications": ["H2S", "CompEx Awareness"],
+    "skills": ["ESP troubleshooting", "Wellsite support", "VSDs", "Field diagnostics"],
+    "summary": "Field service engineer supporting artificial lift equipment, represented in a deliberately noisy OCR-like format.",
+    "roles": [
+      ["Field Service Specialist", "Baker Hughes", "2022-02", "Present"],
+      ["Service Engineer", "Schlumberger", "2018-07", "2022-01"],
+      ["Electrical Engineer", "Basra Energy", "2015-05", "2018-06"]
+    ]
+  },
+  {
+    "id": "CV15",
+    "name": "Aisha Karim",
+    "location": "Kuala Lumpur, Malaysia",
+    "title": "Subsea Engineer",
+    "variant": "many-short-roles",
+    "language": "en",
+    "education": "BEng Ocean Engineering",
+    "certifications": ["BOSIET", "Offshore Medical", "IMCA Awareness"],
+    "skills": ["Subsea installation", "SURF support", "Project engineering", "ROV interface", "Mobilisation"],
+    "summary": "Consultant-style subsea engineer with many short contracts across installation and intervention scopes.",
+    "roles": [
+      ["Subsea Engineer Consultant", "TechnipFMC", "2024-01", "Present"],
+      ["Project Subsea Engineer", "Subsea7", "2022-05", "2023-12"],
+      ["Field Engineer", "Oceaneering", "2021-02", "2022-04"],
+      ["Subsea Project Engineer", "Technip Energies", "2018-08", "2021-01"]
+    ]
+  },
+  {
+    "id": "CV16",
+    "name": "Jonas Richter",
+    "location": "Hamburg, Germany / Open to rotation",
+    "title": "Petroleum Engineer",
+    "variant": "clean",
+    "language": "en",
+    "education": "MSc Petroleum Engineering",
+    "certifications": ["IWCF Level 4", "Prince2 Foundation"],
+    "skills": ["Production optimization", "Nodal analysis", "Artificial lift", "Well performance", "Economic screening"],
+    "summary": "Petroleum engineer with clear relocation and rotation preferences stated throughout the CV.",
+    "roles": [
+      ["Petroleum Engineer", "Wintershall Dea", "2021-10", "Present"],
+      ["Production Engineer", "OMV", "2018-03", "2021-09"],
+      ["Junior Petroleum Engineer", "DEA", "2016-07", "2018-02"]
+    ]
+  },
+  {
+    "id": "CV17",
+    "name": "LUCAS FINN",
+    "location": "Galveston, USA",
+    "title": "Electrical Technician",
+    "variant": "all-caps",
+    "language": "en",
+    "education": "ASSOCIATE DEGREE ELECTRICAL TECHNOLOGY",
+    "certifications": ["COMPEX AWARENESS", "BOSIET", "LOTO"],
+    "skills": ["MCC TROUBLESHOOTING", "HV/LV MAINTENANCE", "EX EQUIPMENT", "PTW", "CALIBRATION"],
+    "summary": "ALL CAPS noisy CV for offshore electrical maintenance technician role normalization and keyword extraction testing.",
+    "roles": [
+      ["ELECTRICAL TECHNICIAN", "TALO ENERGY", "2022-06", "PRESENT"],
+      ["E&I TECH", "TRANSOCEAN", "2018-09", "2022-05"],
+      ["ELECTRICAL HELPER", "GULF MARINE", "2016-01", "2018-08"]
+    ]
+  },
+  {
+    "id": "CV18",
+    "name": "Priya Menon",
+    "location": "Chennai, India",
+    "title": "Procurement Specialist (Oil & Gas)",
+    "variant": "domain-adjacent",
+    "language": "en",
+    "education": "MBA Supply Chain Management",
+    "certifications": ["CIPS Level 4", "SAP MM"],
+    "skills": ["Procurement", "Vendor qualification", "Expediting", "SAP MM", "Logistics coordination"],
+    "summary": "Domain-adjacent candidate in oil and gas procurement, useful for testing role-family eligibility boundaries.",
+    "roles": [
+      ["Procurement Specialist", "Saipem", "2021-04", "Present"],
+      ["Buyer", "McDermott", "2018-01", "2021-03"],
+      ["Supply Chain Analyst", "L&T Hydrocarbon", "2015-07", "2017-12"]
+    ]
+  },
+  {
+    "id": "CV19",
+    "name": "Diego Alvarez",
+    "location": "Villahermosa, Mexico",
+    "title": "Pipeline Inspector",
+    "variant": "multilingual-es-en",
+    "language": "es-en",
+    "education": "Ingeniería Mecánica",
+    "certifications": ["API 570", "NDT Level II", "H2S"],
+    "skills": ["Pipeline inspection", "Corrosion monitoring", "Thickness surveys", "RBI support", "Field reports"],
+    "summary": "Spanish/English pipeline inspector with field and integrity reporting experience in upstream gathering systems.",
+    "roles": [
+      ["Pipeline Inspector", "Pemex", "2021-01", "Present"],
+      ["Inspection Engineer", "TC Energy", "2017-04", "2020-12"],
+      ["Mechanical Inspector", "Local Services", "2014-03", "2017-03"]
+    ]
+  },
+  {
+    "id": "CV20",
+    "name": "Sarah McIver",
+    "location": "Aberdeen, UK",
+    "title": "Senior Production Operator",
+    "variant": "normalization-regression",
+    "language": "en",
+    "education": "SVQ Process Operations",
+    "certifications": ["BOSIET", "MIST", "Emergency Response Team"],
+    "skills": ["Production operations", "Control room support", "Gas dehydration", "Permit to Work", "Alarm response"],
+    "summary": "Designed specifically to stress-test Production Operator / Senior Production Operator normalization and ranking logic.",
+    "roles": [
+      ["Senior Production Operator", "CNOOC", "2020-05", "Present"],
+      ["Production Operator", "Apache", "2015-02", "2020-04"],
+      ["Process Operator", "TAQA", "2011-06", "2015-01"]
+    ]
+  }
+]
