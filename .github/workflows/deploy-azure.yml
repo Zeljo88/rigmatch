@@ -48,6 +48,36 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Validate required configuration
+        shell: bash
+        env:
+          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+          POSTGRES_ADMIN_PASSWORD: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT_NAME: ${{ env.AZURE_OPENAI_DEPLOYMENT_NAME }}
+        run: |
+          missing=0
+
+          check_required() {
+            local name="$1"
+            local value="$2"
+            if [ -z "$value" ]; then
+              echo "::error::Missing required configuration: $name"
+              missing=1
+            fi
+          }
+
+          check_required "JWT_SIGNING_KEY (secret)" "$JWT_SIGNING_KEY"
+          check_required "POSTGRES_ADMIN_PASSWORD (secret)" "$POSTGRES_ADMIN_PASSWORD"
+          check_required "AZURE_OPENAI_ENDPOINT (secret)" "$AZURE_OPENAI_ENDPOINT"
+          check_required "AZURE_OPENAI_API_KEY (secret)" "$AZURE_OPENAI_API_KEY"
+          check_required "AZURE_OPENAI_DEPLOYMENT_NAME (variable)" "$AZURE_OPENAI_DEPLOYMENT_NAME"
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
       - name: Load infrastructure deployment outputs
         id: infra
         shell: bash

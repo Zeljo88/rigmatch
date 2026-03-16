@@ -422,32 +422,35 @@ public static class RoleCatalogSeeder
 
     public static async Task SeedAsync(RigMatchDbContext dbContext, CancellationToken cancellationToken = default)
     {
-        await dbContext.Database.ExecuteSqlRawAsync("""
-            CREATE TABLE IF NOT EXISTS StandardRoles (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Name TEXT NOT NULL,
-                IsActive INTEGER NOT NULL DEFAULT 1
-            );
-            """, cancellationToken);
+        if (dbContext.Database.IsSqlite())
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""
+                CREATE TABLE IF NOT EXISTS StandardRoles (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL,
+                    IsActive INTEGER NOT NULL DEFAULT 1
+                );
+                """, cancellationToken);
 
-        await dbContext.Database.ExecuteSqlRawAsync("""
-            CREATE UNIQUE INDEX IF NOT EXISTS IX_StandardRoles_Name ON StandardRoles(Name);
-            """, cancellationToken);
+            await dbContext.Database.ExecuteSqlRawAsync("""
+                CREATE UNIQUE INDEX IF NOT EXISTS IX_StandardRoles_Name ON StandardRoles(Name);
+                """, cancellationToken);
 
-        await dbContext.Database.ExecuteSqlRawAsync("""
-            CREATE TABLE IF NOT EXISTS RoleAliases (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                StandardRoleId INTEGER NOT NULL,
-                Alias TEXT NOT NULL,
-                AliasNormalized TEXT NOT NULL,
-                RequiresReview INTEGER NOT NULL DEFAULT 0,
-                FOREIGN KEY (StandardRoleId) REFERENCES StandardRoles(Id) ON DELETE CASCADE
-            );
-            """, cancellationToken);
+            await dbContext.Database.ExecuteSqlRawAsync("""
+                CREATE TABLE IF NOT EXISTS RoleAliases (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    StandardRoleId INTEGER NOT NULL,
+                    Alias TEXT NOT NULL,
+                    AliasNormalized TEXT NOT NULL,
+                    RequiresReview INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY (StandardRoleId) REFERENCES StandardRoles(Id) ON DELETE CASCADE
+                );
+                """, cancellationToken);
 
-        await dbContext.Database.ExecuteSqlRawAsync("""
-            CREATE UNIQUE INDEX IF NOT EXISTS IX_RoleAliases_AliasNormalized ON RoleAliases(AliasNormalized);
-            """, cancellationToken);
+            await dbContext.Database.ExecuteSqlRawAsync("""
+                CREATE UNIQUE INDEX IF NOT EXISTS IX_RoleAliases_AliasNormalized ON RoleAliases(AliasNormalized);
+                """, cancellationToken);
+        }
 
         await EnsureStandardRolesAsync(dbContext, cancellationToken);
         await EnsureRoleAliasesAsync(dbContext, cancellationToken);
