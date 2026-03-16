@@ -1,4 +1,4 @@
-name: Deploy RigMatch to Azure
+name: Deploy RigMatch App to Azure
 
 on:
   push:
@@ -11,16 +11,16 @@ permissions:
   id-token: write
 
 concurrency:
-  group: rigmatch-azure-deploy
+  group: rigmatch-azure-app-deploy
   cancel-in-progress: true
 
 env:
   AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
-  AZURE_LOCATION: ${{ vars.AZURE_LOCATION || 'swedencentral' }}
-  AZURE_STATIC_WEB_APP_LOCATION: ${{ vars.AZURE_STATIC_WEB_APP_LOCATION || vars.AZURE_LOCATION || 'swedencentral' }}
   RIGMATCH_NAME_PREFIX: ${{ vars.RIGMATCH_NAME_PREFIX || 'rigmatch' }}
   POSTGRES_ADMIN_USERNAME: ${{ vars.POSTGRES_ADMIN_USERNAME || 'rigmatchadmin' }}
+  POSTGRES_DATABASE_NAME: ${{ vars.POSTGRES_DATABASE_NAME || 'rigmatch' }}
   AZURE_OPENAI_DEPLOYMENT_NAME: ${{ vars.AZURE_OPENAI_DEPLOYMENT_NAME }}
+  AZURE_INFRA_DEPLOYMENT_NAME: ${{ vars.AZURE_INFRA_DEPLOYMENT_NAME || 'main' }}
   DOTNET_VERSION: '9.0.x'
   NODE_VERSION: '20'
 
@@ -48,39 +48,55 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Ensure resource group
-        shell: bash
-        run: |
-          az group create \
-            --name "$AZURE_RESOURCE_GROUP" \
-            --location "$AZURE_LOCATION"
-
-      - name: Provision Azure infrastructure
+      - name: Load infrastructure deployment outputs
         id: infra
         shell: bash
         run: |
-          deployment_json="$(az deployment group create \
+          deployment_json="$(az deployment group show \
             --resource-group "$AZURE_RESOURCE_GROUP" \
-            --template-file infra/main.bicep \
-            --parameters \
-              namePrefix="$RIGMATCH_NAME_PREFIX" \
-              location="$AZURE_LOCATION" \
-              staticWebAppLocation="$AZURE_STATIC_WEB_APP_LOCATION" \
-              postgresAdminUsername="$POSTGRES_ADMIN_USERNAME" \
-              postgresAdminPassword="${{ secrets.POSTGRES_ADMIN_PASSWORD }}" \
+            --name "$AZURE_INFRA_DEPLOYMENT_NAME" \
             --output json)"
 
           echo "$deployment_json" > deployment.json
 
-          echo "web_app_name=$(jq -r '.properties.outputs.webAppName.value' deployment.json)" >> "$GITHUB_OUTPUT"
-          echo "web_app_url=$(jq -r '.properties.outputs.webAppUrl.value' deployment.json)" >> "$GITHUB_OUTPUT"
-          echo "static_web_app_name=$(jq -r '.properties.outputs.staticWebAppName.value' deployment.json)" >> "$GITHUB_OUTPUT"
-          echo "static_web_app_url=$(jq -r '.properties.outputs.staticWebAppUrl.value' deployment.json)" >> "$GITHUB_OUTPUT"
-          echo "storage_account_name=$(jq -r '.properties.outputs.storageAccountName.value' deployment.json)" >> "$GITHUB_OUTPUT"
-          echo "blob_container_name=$(jq -r '.properties.outputs.blobContainerName.value' deployment.json)" >> "$GITHUB_OUTPUT"
-          echo "app_insights_connection_string=$(jq -r '.properties.outputs.appInsightsConnectionString.value' deployment.json)" >> "$GITHUB_OUTPUT"
-          echo "postgres_fqdn=$(jq -r '.properties.outputs.postgresFullyQualifiedDomainName.value' deployment.json)" >> "$GITHUB_OUTPUT"
-          echo "postgres_db_name=$(jq -r '.properties.outputs.postgresDatabaseName.value' deployment.json)" >> "$GITHUB_OUTPUT"
+          web_app_name="$(jq -r '.properties.outputs.webAppName.value // empty' deployment.json)"
+          web_app_url="$(jq -r '.properties.outputs.webAppUrl.value // empty' deployment.json)"
+          static_web_app_name="$(jq -r '.properties.outputs.staticWebAppName.value // empty' deployment.json)"
+          static_web_app_url="$(jq -r '.properties.outputs.staticWebAppUrl.value // empty' deployment.json)"
+          storage_account_name="$(jq -r '.properties.outputs.storageAccountName.value // empty' deployment.json)"
+          blob_container_name="$(jq -r '.properties.outputs.blobContainerName.value // empty' deployment.json)"
+          app_insights_connection_string="$(jq -r '.properties.outputs.appInsightsConnectionString.value // empty' deployment.json)"
+          postgres_fqdn="$(jq -r '.properties.outputs.postgresFullyQualifiedDomainName.value // empty' deployment.json)"
+          postgres_db_name="$(jq -r '.properties.outputs.postgresDatabaseName.value // empty' deployment.json)"
+
+          for value in \
+            "$web_app_name" \
+            "$web_app_url" \
+            "$static_web_app_name" \
+            "$static_web_app_url" \
+            "$storage_account_name" \
+            "$blob_container_name" \
+            "$app_insights_connection_string" \
+            "$postgres_fqdn"; do
+            if [ -z "$value" ]; then
+              echo "Missing required infrastructure output. Re-run infra deployment workflow first."
+              exit 1
+            fi
+          done
+
+          if [ -z "$postgres_db_name" ]; then
+            postgres_db_name="$POSTGRES_DATABASE_NAME"
+          fi
+
+          echo "web_app_name=$web_app_name" >> "$GITHUB_OUTPUT"
+          echo "web_app_url=$web_app_url" >> "$GITHUB_OUTPUT"
+          echo "static_web_app_name=$static_web_app_name" >> "$GITHUB_OUTPUT"
+          echo "static_web_app_url=$static_web_app_url" >> "$GITHUB_OUTPUT"
+          echo "storage_account_name=$storage_account_name" >> "$GITHUB_OUTPUT"
+          echo "blob_container_name=$blob_container_name" >> "$GITHUB_OUTPUT"
+          echo "app_insights_connection_string=$app_insights_connection_string" >> "$GITHUB_OUTPUT"
+          echo "postgres_fqdn=$postgres_fqdn" >> "$GITHUB_OUTPUT"
+          echo "postgres_db_name=$postgres_db_name" >> "$GITHUB_OUTPUT"
 
       - name: Configure API app settings
         shell: bash

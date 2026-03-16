@@ -140,7 +140,8 @@ The application is set up so that:
 Azure deployment preparation is already included:
 
 - infrastructure template: [main.bicep](c:/DemoProjects/rigmatch/infra/main.bicep)
-- GitHub Actions workflow: [deploy-azure.yml](c:/DemoProjects/rigmatch/.github/workflows/deploy-azure.yml)
+- GitHub Actions app workflow: [deploy-azure.yml](c:/DemoProjects/rigmatch/.github/workflows/deploy-azure.yml)
+- GitHub Actions infra workflow: [deploy-infra-azure.yml](c:/DemoProjects/rigmatch/.github/workflows/deploy-infra-azure.yml)
 - setup notes: [azure-deployment.md](c:/DemoProjects/rigmatch/docs/azure-deployment.md)
 
 Planned Azure hosting model:

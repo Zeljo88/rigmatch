@@ -1,0 +1,71 @@
+name: Deploy RigMatch Infrastructure to Azure
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: rigmatch-azure-infra-deploy
+  cancel-in-progress: true
+
+env:
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION || 'swedencentral' }}
+  AZURE_STATIC_WEB_APP_LOCATION: ${{ vars.AZURE_STATIC_WEB_APP_LOCATION || 'westeurope' }}
+  RIGMATCH_NAME_PREFIX: ${{ vars.RIGMATCH_NAME_PREFIX || 'rigmatch' }}
+  POSTGRES_ADMIN_USERNAME: ${{ vars.POSTGRES_ADMIN_USERNAME || 'rigmatchadmin' }}
+  AZURE_INFRA_DEPLOYMENT_NAME: ${{ vars.AZURE_INFRA_DEPLOYMENT_NAME || 'main' }}
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure resource group
+        shell: bash
+        run: |
+          az group create \
+            --name "$AZURE_RESOURCE_GROUP" \
+            --location "$AZURE_LOCATION"
+
+      - name: Deploy infrastructure
+        shell: bash
+        run: |
+          az deployment group create \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "$AZURE_INFRA_DEPLOYMENT_NAME" \
+            --template-file infra/main.bicep \
+            --parameters \
+              namePrefix="$RIGMATCH_NAME_PREFIX" \
+              location="$AZURE_LOCATION" \
+              staticWebAppLocation="$AZURE_STATIC_WEB_APP_LOCATION" \
+              postgresAdminUsername="$POSTGRES_ADMIN_USERNAME" \
+              postgresAdminPassword="${{ secrets.POSTGRES_ADMIN_PASSWORD }}"
+
+      - name: Publish deployment outputs
+        shell: bash
+        run: |
+          az deployment group show \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "$AZURE_INFRA_DEPLOYMENT_NAME" \
+            --query properties.outputs \
+            --output json > outputs.json
+
+          echo "### Infrastructure Outputs" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Web App: $(jq -r '.webAppName.value' outputs.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Static Web App: $(jq -r '.staticWebAppName.value' outputs.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Storage Account: $(jq -r '.storageAccountName.value' outputs.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- PostgreSQL Server: $(jq -r '.postgresServerName.value' outputs.json)" >> "$GITHUB_STEP_SUMMARY"

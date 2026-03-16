@@ -113,13 +113,14 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
   }
 }
 
-resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
+resource staticWebApp 'Microsoft.Web/staticSites@2022-09-01' = {
   name: staticWebAppName
   location: staticWebAppLocation
   sku: {
     name: 'Free'
     tier: 'Free'
   }
+  properties: {}
 }
 
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
